@@ -1,4 +1,5 @@
 import os
+from time import perf_counter
 from dataclasses import dataclass
 
 from agents import Agent, Runner
@@ -35,7 +36,8 @@ def _resolve_api_key(llm_model: LlmModel) -> str:
     return api_key
 
 
-def _run_single_benchmark(item: Item, llm_model: LlmModel) -> str:
+def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
+    """単一ベンチマークを実行し、応答と実行時間を返す"""
     api_key = _resolve_api_key(llm_model)
     model = LitellmModel(llm_model.model, base_url=llm_model.base_url, api_key=api_key)
     agent = Agent(
@@ -43,8 +45,10 @@ def _run_single_benchmark(item: Item, llm_model: LlmModel) -> str:
         model=model,
         instructions="コードブロックは不要。出力は常に解答のみ出力すること",
     )
+    start = perf_counter()
     result = Runner.run_sync(agent, item.problem)
-    return _normalize_text(result.final_output)
+    exec_time = perf_counter() - start
+    return _normalize_text(result.final_output), exec_time
 
 
 def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
@@ -65,7 +69,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
         for item in items:
             for llm_model in llm_models:
                 try:
-                    result = _run_single_benchmark(item=item, llm_model=llm_model)
+                    result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
                 except BenchmarkExecutionError:
                     raise
                 except Exception:
@@ -76,6 +80,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                     item=item,
                     llm_model=llm_model,
                     result=result,
+                    exec_time=exec_time,
                     judge=item.answer in result,
                 )
                 created_results += 1
