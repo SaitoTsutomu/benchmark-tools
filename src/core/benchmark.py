@@ -35,12 +35,16 @@ def _resolve_api_key(llm_model: LlmModel) -> str:
     return api_key
 
 
-def _run_single_benchmark(item: Item, llm_model: LlmModel) -> bool:
+def _run_single_benchmark(item: Item, llm_model: LlmModel) -> str:
     api_key = _resolve_api_key(llm_model)
     model = LitellmModel(llm_model.model, base_url=llm_model.base_url, api_key=api_key)
-    agent = Agent(name="Assistant", model=model)
+    agent = Agent(
+        name="Assistant",
+        model=model,
+        instructions="コードブロックは不要。出力は常に解答のみ出力すること",
+    )
     result = Runner.run_sync(agent, item.problem)
-    return _normalize_text(result.final_output) == _normalize_text(item.answer)
+    return _normalize_text(result.final_output)
 
 
 def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
@@ -61,13 +65,19 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
         for item in items:
             for llm_model in llm_models:
                 try:
-                    judge = _run_single_benchmark(item=item, llm_model=llm_model)
+                    result = _run_single_benchmark(item=item, llm_model=llm_model)
                 except BenchmarkExecutionError:
                     raise
                 except Exception:
                     failed_requests += 1
                     continue
-                Result.objects.create(group=group, item=item, llm_model=llm_model, judge=judge)
+                Result.objects.create(
+                    group=group,
+                    item=item,
+                    llm_model=llm_model,
+                    result=result,
+                    judge=result == item.answer,
+                )
                 created_results += 1
 
     return BenchmarkRunSummary(created_results=created_results, failed_requests=failed_requests)

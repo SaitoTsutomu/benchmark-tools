@@ -1,5 +1,7 @@
+from django import forms
 from django.contrib import admin, messages
-from django.db.models import QuerySet
+from django.db import models
+from django.db.models import Count, QuerySet
 from django.http import HttpRequest
 
 from core.benchmark import BenchmarkExecutionError, run_group_benchmark
@@ -33,18 +35,29 @@ class GroupItemInline(admin.TabularInline):
     model = GroupItem
     extra = 0
     autocomplete_fields = ("item",)
+    readonly_fields = ("updated_at", "created_at")
 
 
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
     """テストグループ"""
 
-    list_display = ("name", "updated_at")
+    list_display = ("name", "item_count", "updated_at")
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
     inlines = (GroupItemInline,)
     actions = ("run_benchmark",)
+
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Group]:
+        """一覧表示用のクエリセットを取得する"""
+        queryset = super().get_queryset(request)
+        return queryset.annotate(item_count=Count("group_items"))
+
+    @admin.display(description="項目数", ordering="item_count")
+    def item_count(self, obj: Group) -> int:
+        """グループ内のテスト項目数を返す"""
+        return int(obj.item_count)
 
     @admin.action(description="選択したテストグループでベンチマークを実行")
     def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Group]) -> None:
@@ -79,3 +92,9 @@ class ResultAdmin(admin.ModelAdmin):
     list_filter = ("group", "llm_model", "judge")
     search_fields = ("group__name", "item__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
+
+    def formfield_for_dbfield(self, db_field: models.Field, request: HttpRequest, **kwargs: object) -> forms.Field:
+        """resultフィールドの入力欄を複数行向けに調整する"""
+        if db_field.name == "result":
+            kwargs["widget"] = forms.Textarea(attrs={"rows": 8, "cols": 72})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

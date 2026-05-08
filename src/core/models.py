@@ -99,4 +99,4 @@ class Result(TimestampedModel):
         verbose_name = verbose_name_plural = "テスト結果"
 
     def __str__(self) -> str:
-        return f"group={self.group.name}, item={self.item.name}, model={self.llm_model.model}, judge={self.judge}"
+        return f"{self.group.name} {self.item.name} {self.llm_model.model.split('/')[-1]}"
