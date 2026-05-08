@@ -66,19 +66,41 @@ class Group(TimestampedModel):
         return self.name
 
 
-class GroupItem(TimestampedModel):
-    """テストグループとテスト項目"""
+class GroupLlmModel(TimestampedModel):
+    """テストグループが実施するLLMモデル"""
 
-    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="group_items", verbose_name="テスト項目")
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ"
+        Group, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="テストグループ"
+    )
+    llm_model = models.ForeignKey(
+        LlmModel, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="LLMモデル"
     )
 
     class Meta:
         constraints: ClassVar[list[models.UniqueConstraint]] = [
             models.UniqueConstraint(
-                fields=["item", "group"],
-                name="uniq_groupitem_item_group",
+                fields=["group", "llm_model"],
+                name="uniq_group_llm_model",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.group.name} - {self.llm_model.model}"
+
+
+class GroupItem(TimestampedModel):
+    """テストグループが実施するテスト項目"""
+
+    group = models.ForeignKey(
+        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ"
+    )
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="group_items", verbose_name="テスト項目")
+
+    class Meta:
+        constraints: ClassVar[list[models.UniqueConstraint]] = [
+            models.UniqueConstraint(
+                fields=["group", "item"],
+                name="uniq_group_item",
             )
         ]
 
