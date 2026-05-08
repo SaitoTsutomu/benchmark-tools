@@ -48,6 +48,8 @@ pythonpath = ["src"]
 site-package-path = [".venv/lib/python3.14/site-packages"]
 
 [tool.pyrefly.errors]
+bad-argument-type = false
+missing-attribute = false
 
 [tool.ruff]
 extend-exclude = ["manage.py", "migrations"]

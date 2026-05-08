@@ -70,7 +70,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
                     judge = item.answer in result
-                except Exception:
+                except BenchmarkExecutionError:
                     failed_requests += 1
                 Result.objects.create(
                     group=group,

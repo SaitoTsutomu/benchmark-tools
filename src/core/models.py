@@ -1,4 +1,4 @@
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from django.db import models
 from django.utils import timezone
@@ -13,7 +13,7 @@ class TimestampedModel(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         """時刻を更新する"""
         self.updated_at = timezone.now()
         super().save(*args, **kwargs)
@@ -33,7 +33,7 @@ class LlmModel(TimestampedModel):
             models.UniqueConstraint(
                 fields=["model", "base_url"],
                 name="uniq_llmmodel_model_base_url",
-            )
+            ),
         ]
 
     def __str__(self) -> str:
@@ -70,10 +70,10 @@ class GroupLlmModel(TimestampedModel):
     """テストグループが実施するLLMモデル"""
 
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="テストグループ"
+        Group, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="テストグループ",
     )
     llm_model = models.ForeignKey(
-        LlmModel, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="LLMモデル"
+        LlmModel, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="LLMモデル",
     )
 
     class Meta:
@@ -81,7 +81,7 @@ class GroupLlmModel(TimestampedModel):
             models.UniqueConstraint(
                 fields=["group", "llm_model"],
                 name="uniq_group_llm_model",
-            )
+            ),
         ]
 
     def __str__(self) -> str:
@@ -92,7 +92,7 @@ class GroupItem(TimestampedModel):
     """テストグループが実施するテスト項目"""
 
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ"
+        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ",
     )
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="group_items", verbose_name="テスト項目")
 
@@ -101,7 +101,7 @@ class GroupItem(TimestampedModel):
             models.UniqueConstraint(
                 fields=["group", "item"],
                 name="uniq_group_item",
-            )
+            ),
         ]
 
     def __str__(self) -> str:
