@@ -53,17 +53,13 @@ def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
 
 def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
     """テストグループでベンチマークを実行"""
-    llm_models = list(LlmModel.objects.all())
-    if not llm_models:
-        msg = "LLMモデルが1件も登録されていません"
-        raise BenchmarkExecutionError(msg)
-
     created_results = 0
     failed_requests = 0
 
     for group in groups:
         items = [group_item.item for group_item in group.group_items.select_related("item")]
-        if not items:
+        llm_models = [entry.llm_model for entry in group.group_llm_models.select_related("llm_model")]
+        if not items or not llm_models:
             continue
 
         for item in items:

@@ -5,7 +5,7 @@ from django.db.models import Count, QuerySet
 from django.http import HttpRequest
 
 from core.benchmark import BenchmarkExecutionError, run_group_benchmark
-from core.models import Group, GroupItem, Item, LlmModel, Result
+from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 
 @admin.register(LlmModel)
@@ -38,6 +38,15 @@ class GroupItemInline(admin.TabularInline):
     readonly_fields = ("updated_at", "created_at")
 
 
+class GroupLlmModelInline(admin.TabularInline):
+    """テストグループとLLMモデル"""
+
+    model = GroupLlmModel
+    extra = 0
+    autocomplete_fields = ("llm_model",)
+    readonly_fields = ("updated_at", "created_at")
+
+
 @admin.register(Group)
 class GroupAdmin(admin.ModelAdmin):
     """テストグループ"""
@@ -46,7 +55,7 @@ class GroupAdmin(admin.ModelAdmin):
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
-    inlines = (GroupItemInline,)
+    inlines = (GroupLlmModelInline, GroupItemInline)
     actions = ("run_benchmark",)
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Group]:
