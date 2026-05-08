@@ -2,7 +2,10 @@
 authors = [
   {name = "Saito Tsutomu", email = "tsutomu.saito@moai-lab.jp"},
 ]
-dependencies = []
+dependencies = [
+  "openai-agents[litellm]>=0.16.1",
+  "polars[numpy,pandas,plot,pyarrow]>=1.40.1",
+]
 description = "Add your description here"
 name = "benchmark-tools"
 readme = "README.md"
