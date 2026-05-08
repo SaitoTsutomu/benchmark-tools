@@ -121,29 +121,48 @@ class ResultAdmin(admin.ModelAdmin):
     @classmethod
     def summary_by_llm(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
         """指定クエリの結果をLLM単位で集計する。"""
+        all_combo_rows = queryset.values("group_id", "item_id", "llm_model__model").annotate(
+            success=Avg("judge"),
+            avg_exec_time=Avg("exec_time"),
+        )
         per_combo_rows = queryset.filter(judge__isnull=False).values("group_id", "item_id", "llm_model__model").annotate(
             success=Avg("judge"),
             avg_exec_time=Avg("exec_time"),
         )
         llm_summary_map: dict[str, dict[str, float | int]] = {}
+        for row in all_combo_rows:
+            label = str(row["llm_model__model"])
+            llm_summary = llm_summary_map.setdefault(
+                label,
+                {"total": 0, "executed_total": 0, "unexecuted_total": 0, "success": 0.0, "exec_time_sum": 0.0},
+            )
+            llm_summary["total"] += 1
+            if row["success"] is None:
+                llm_summary["unexecuted_total"] += 1
         for row in per_combo_rows:
             label = str(row["llm_model__model"])
-            llm_summary = llm_summary_map.setdefault(label, {"total": 0, "success": 0.0, "exec_time_sum": 0.0})
-            llm_summary["total"] += 1
+            llm_summary = llm_summary_map.setdefault(
+                label,
+                {"total": 0, "executed_total": 0, "unexecuted_total": 0, "success": 0.0, "exec_time_sum": 0.0},
+            )
+            llm_summary["executed_total"] += 1
             llm_summary["success"] += float(row["success"] or 0.0)
             llm_summary["exec_time_sum"] += float(row["avg_exec_time"] or 0.0)
 
         summary_rows: list[dict[str, object]] = []
         for label, llm_summary in llm_summary_map.items():
             total = int(llm_summary["total"])
+            executed_total = int(llm_summary["executed_total"])
+            unexecuted_total = int(llm_summary["unexecuted_total"])
             success = float(llm_summary["success"])
-            avg_exec_time = (float(llm_summary["exec_time_sum"]) / total) if total else 0.0
+            avg_exec_time = (float(llm_summary["exec_time_sum"]) / executed_total) if executed_total else 0.0
             summary_rows.append(
                 {
                     "label": label,
-                    "total": total,
+                    "total": executed_total,
                     "success": success,
-                    "accuracy": (success / total * 100.0) if total else 0.0,
+                    "accuracy": (success / executed_total * 100.0) if executed_total else 0.0,
+                    "unexecuted_ratio": (unexecuted_total / total * 100.0) if total else 0.0,
                     "avg_exec_time": avg_exec_time,
                 },
             )
