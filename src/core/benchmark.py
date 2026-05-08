@@ -1,6 +1,6 @@
 import os
-from time import perf_counter
 from dataclasses import dataclass
+from time import perf_counter
 
 from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
@@ -64,20 +64,21 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
 
         for item in items:
             for llm_model in llm_models:
+                result = ""
+                exec_time = float("nan")
+                judge = None
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
-                except BenchmarkExecutionError:
-                    raise
+                    judge = item.answer in result
                 except Exception:
                     failed_requests += 1
-                    continue
                 Result.objects.create(
                     group=group,
                     item=item,
                     llm_model=llm_model,
                     result=result,
                     exec_time=exec_time,
-                    judge=item.answer in result,
+                    judge=judge,
                 )
                 created_results += 1
 

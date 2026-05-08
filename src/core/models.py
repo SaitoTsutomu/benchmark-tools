@@ -7,8 +7,8 @@ from django.utils import timezone
 class TimestampedModel(models.Model):
     """タイムスタンプ共通基底"""
 
-    created_at = models.DateTimeField(default=timezone.now, null=False)
-    updated_at = models.DateTimeField(default=timezone.now, null=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         abstract = True
@@ -116,7 +116,7 @@ class Result(TimestampedModel):
     llm_model = models.ForeignKey(LlmModel, on_delete=models.CASCADE, related_name="results", verbose_name="LLMモデル")
     result = models.CharField("解答", max_length=255)
     exec_time = models.FloatField("実行時間")
-    judge = models.BooleanField("判定結果")
+    judge = models.BooleanField("判定結果", null=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "テスト結果"
