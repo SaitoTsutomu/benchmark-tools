@@ -11,6 +11,7 @@ class LlmModelAdmin(admin.ModelAdmin):
     """LLMモデル"""
 
     list_display = ("model", "base_url", "api_key_name", "can_parallel", "updated_at")
+    readonly_fields = ("updated_at", "created_at")
     list_filter = ("can_parallel",)
     search_fields = ("model", "base_url", "api_key_name")
     ordering = ("model",)
@@ -21,6 +22,7 @@ class ItemAdmin(admin.ModelAdmin):
     """テスト項目"""
 
     list_display = ("name", "updated_at")
+    readonly_fields = ("updated_at", "created_at")
     search_fields = ("name", "problem", "answer")
     ordering = ("name",)
 
@@ -38,6 +40,7 @@ class GroupAdmin(admin.ModelAdmin):
     """テストグループ"""
 
     list_display = ("name", "updated_at")
+    readonly_fields = ("updated_at", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
     inlines = (GroupItemInline,)
@@ -72,6 +75,7 @@ class ResultAdmin(admin.ModelAdmin):
     """テスト結果"""
 
     list_display = ("group", "item", "llm_model", "judge", "updated_at")
+    readonly_fields = ("updated_at", "created_at")
     list_filter = ("group", "llm_model", "judge")
     search_fields = ("group__name", "item__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
