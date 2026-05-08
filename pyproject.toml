@@ -3,15 +3,73 @@ authors = [
   {name = "Saito Tsutomu", email = "tsutomu.saito@moai-lab.jp"},
 ]
 dependencies = [
-  "openai-agents[litellm]>=0.16.1",
-  "polars[numpy,pandas,plot,pyarrow]>=1.40.1",
+  "django>=6.0",
+  "django-tailwind[cookiecutter,honcho,reload]>=4.4.2",
+  "openai-agents[litellm]>=0.15",
+  "polars[numpy,pandas,plot,pyarrow]>=1.40",
 ]
-description = "Add your description here"
+description = "Benchmark tool"
 name = "benchmark-tools"
 readme = "README.md"
 requires-python = ">=3.14"
 version = "0.1.0"
 
-[build-system]
-build-backend = "uv_build"
-requires = ["uv_build>=0.11.11,<0.12.0"]
+[dependency-groups]
+dev = [
+  "django-stubs>=6.0",
+  "jupyter>=1.1.1",
+  "pytest-django>=4.12",
+]
+
+[tool.taskipy.tasks]
+init_db = "task manage migrate && task manage createsuperuser --noinput --username admin --email ''"
+jupyter = "uv run --env-file .env jupyter lab -y nbs"
+lint = "pyrefly check src && ruff check"
+manage = "uv run --env-file ../.env --directory src ./manage.py"
+pip-audit = "uv run -w pip-audit pip-audit"
+test = "uv run --env-file .env pytest --disable-warnings"
+
+[tool.uv]
+exclude-newer = "3 days"
+
+[[tool.uv.index]]
+default = true
+url = "https://pypi.flatt.tech/simple/"
+
+[tool.django-stubs]
+django_settings_module = "project.settings"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "project.settings"
+norecursedirs = ["nbs"]
+pythonpath = ["src"]
+
+[tool.pyrefly]
+site-package-path = [".venv/lib/python3.14/site-packages"]
+
+[tool.pyrefly.errors]
+
+[tool.ruff]
+extend-exclude = ["manage.py", "migrations"]
+src = ["src"]
+
+[tool.ruff.lint]
+ignore = [
+  "ANN401",
+  "CPY",
+  "D10",
+  "D203",
+  "D213",
+  "D400",
+  "D415",
+  "DOC",
+  "E501",
+]
+preview = true
+select = ["ALL"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"*/tests/*.py" = ["S101"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10

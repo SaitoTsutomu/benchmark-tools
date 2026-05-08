@@ -1,4 +1,5 @@
 # Extra
+db.sqlite3
 tmp/
 nbs/
 .vscode/
