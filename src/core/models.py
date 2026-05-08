@@ -93,6 +93,7 @@ class Result(TimestampedModel):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="results", verbose_name="テスト項目")
     llm_model = models.ForeignKey(LlmModel, on_delete=models.CASCADE, related_name="results", verbose_name="LLMモデル")
     result = models.CharField("解答", max_length=255)
+    exec_time = models.FloatField("実行時間")
     judge = models.BooleanField("判定結果")
 
     class Meta:

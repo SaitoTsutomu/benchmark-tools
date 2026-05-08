@@ -76,7 +76,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                     item=item,
                     llm_model=llm_model,
                     result=result,
-                    judge=result == item.answer,
+                    judge=item.answer in result,
                 )
                 created_results += 1
 
