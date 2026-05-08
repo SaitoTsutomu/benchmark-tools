@@ -2,14 +2,12 @@ from typing import TYPE_CHECKING
 
 from django import forms
 from django.contrib import admin, messages
-from django.db.models import Avg, Count, Q, QuerySet
+from django.db.models import Avg, Count, QuerySet
 
 from core.benchmark import BenchmarkExecutionError, run_group_benchmark
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
-
     from django.db import models
     from django.http import HttpRequest
     from django.http.response import HttpResponse
@@ -120,40 +118,38 @@ class ResultAdmin(admin.ModelAdmin):
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
 
-    @staticmethod
-    def _build_summary_rows(
-        summary_queryset: Iterable[dict[str, object]],
-        label_key: str,
-    ) -> list[dict[str, object]]:
-        """集計クエリ結果を表示用の行データへ変換する。"""
-        rows: list[dict[str, object]] = []
-        for row in summary_queryset:
-            total = int(row["total"])
-            success = int(row["success"])
-            accuracy = (success / total * 100.0) if total else 0.0
-            rows.append(
+    @classmethod
+    def summary_by_llm(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
+        """指定クエリの結果をLLM単位で集計する。"""
+        per_combo_rows = queryset.filter(judge__isnull=False).values("group_id", "item_id", "llm_model__model").annotate(
+            success=Avg("judge"),
+            avg_exec_time=Avg("exec_time"),
+        )
+        llm_summary_map: dict[str, dict[str, float | int]] = {}
+        for row in per_combo_rows:
+            label = str(row["llm_model__model"])
+            llm_summary = llm_summary_map.setdefault(label, {"total": 0, "success": 0.0, "exec_time_sum": 0.0})
+            llm_summary["total"] += 1
+            llm_summary["success"] += float(row["success"] or 0.0)
+            llm_summary["exec_time_sum"] += float(row["avg_exec_time"] or 0.0)
+
+        summary_rows: list[dict[str, object]] = []
+        for label, llm_summary in llm_summary_map.items():
+            total = int(llm_summary["total"])
+            success = float(llm_summary["success"])
+            avg_exec_time = (float(llm_summary["exec_time_sum"]) / total) if total else 0.0
+            summary_rows.append(
                 {
-                    "label": str(row[label_key]),
+                    "label": label,
                     "total": total,
                     "success": success,
-                    "accuracy": accuracy,
-                    "avg_exec_time": float(row["avg_exec_time"]),
+                    "accuracy": (success / total * 100.0) if total else 0.0,
+                    "avg_exec_time": avg_exec_time,
                 },
             )
-        return rows
 
-    def _summary_by_llm(self, queryset: QuerySet[Result]) -> list[dict[str, object]]:
-        """指定クエリの結果をLLM単位で集計する。"""
-        summary_queryset = (
-            queryset.values("llm_model__model")
-            .annotate(
-                total=Count("id"),
-                success=Count("id", filter=Q(judge=True)),
-                avg_exec_time=Avg("exec_time"),
-            )
-            .order_by("-success", "avg_exec_time", "llm_model__model")
-        )
-        return self._build_summary_rows(summary_queryset=summary_queryset, label_key="llm_model__model")
+        summary_rows.sort(key=lambda row: (-float(row["success"]), float(row["avg_exec_time"]), str(row["label"])))
+        return summary_rows
 
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, object] | None = None) -> HttpResponse:
         """一覧画面に集計サマリーを追加する。"""
@@ -167,11 +163,16 @@ class ResultAdmin(admin.ModelAdmin):
             return response
 
         filtered_results = changelist.queryset
-        context["summary_all_by_llm"] = self._summary_by_llm(filtered_results)
+        context["summary_all_by_llm"] = self.summary_by_llm(filtered_results)
         return response
 
-    def formfield_for_dbfield(self, db_field: models.Field, request: HttpRequest, **kwargs: object) -> None:
+    def formfield_for_dbfield(
+        self,
+        db_field: models.Field,
+        request: HttpRequest,
+        **kwargs: object,
+    ) -> forms.Field | None:
         """resultフィールドの入力欄を複数行向けに調整する"""
         if db_field.name == "result":
             kwargs["widget"] = forms.Textarea(attrs={"rows": 8, "cols": 72})
-        super().formfield_for_dbfield(db_field, request, **kwargs)
+        return super().formfield_for_dbfield(db_field, request, **kwargs)

@@ -6,7 +6,6 @@ dependencies = [
   "django>=6.0",
   "django-tailwind[cookiecutter,honcho,reload]>=4.4.2",
   "openai-agents[litellm]>=0.15",
-  "polars[numpy,pandas,plot,pyarrow]>=1.40",
 ]
 description = "Benchmark tool"
 name = "benchmark-tools"
@@ -18,7 +17,10 @@ version = "0.1.0"
 dev = [
   "django-stubs>=6.0",
   "jupyter>=1.1.1",
+  "polars[numpy,pandas,plot,pyarrow]>=1.40",
   "pytest-django>=4.12",
+  "litellm>=1.83.7",
+  "django>=6.0.5",
 ]
 
 [tool.taskipy.tasks]
