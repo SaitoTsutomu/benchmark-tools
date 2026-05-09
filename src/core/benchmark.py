@@ -63,13 +63,14 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
             continue
 
         for item in items:
+            answer = _normalize_text(item.answer)
             for llm_model in llm_models:
                 result = ""
                 exec_time = float("nan")
                 judge = None
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
-                    judge = item.answer in result
+                    judge = answer in result
                 except BenchmarkExecutionError:
                     failed_requests += 1
                 Result.objects.create(
