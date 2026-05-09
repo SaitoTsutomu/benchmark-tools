@@ -57,8 +57,8 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
     failed_requests = 0
 
     for group in groups:
-        items = [group_item.item for group_item in group.group_items.select_related("item")]
-        llm_models = [entry.llm_model for entry in group.group_llm_models.select_related("llm_model")]
+        llm_models = LlmModel.objects.filter(group_llm_models__group=group)
+        items = Item.objects.filter(group_items__group=group)
         if not items or not llm_models:
             continue
 

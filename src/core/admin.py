@@ -119,43 +119,44 @@ class ResultAdmin(admin.ModelAdmin):
     change_list_template = "admin/core/result/change_list.html"
 
     @classmethod
-    def summary_by_llm(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
-        """指定クエリの結果をLLM単位で集計する。"""
-        all_combo_rows = queryset.values("group_id", "item_id", "llm_model__model").annotate(
+    def _summary_by_dimension(cls, queryset: QuerySet[Result], label_field: str) -> list[dict[str, object]]:
+        """指定軸ごとに結果を集計する。"""
+        all_combo_rows = queryset.values("group_id", "item_id", label_field).annotate(
             success=Avg("judge"),
             avg_exec_time=Avg("exec_time"),
         )
-        per_combo_rows = queryset.filter(judge__isnull=False).values("group_id", "item_id", "llm_model__model").annotate(
+        per_combo_rows = queryset.filter(judge__isnull=False).values("group_id", "item_id", label_field).annotate(
             success=Avg("judge"),
             avg_exec_time=Avg("exec_time"),
         )
-        llm_summary_map: dict[str, dict[str, float | int]] = {}
+        summary_map: dict[str, dict[str, float | int]] = {}
         for row in all_combo_rows:
-            label = str(row["llm_model__model"])
-            llm_summary = llm_summary_map.setdefault(
+            label = str(row[label_field])
+            summary = summary_map.setdefault(
                 label,
                 {"total": 0, "executed_total": 0, "unexecuted_total": 0, "success": 0.0, "exec_time_sum": 0.0},
             )
-            llm_summary["total"] += 1
+            summary["total"] += 1
             if row["success"] is None:
-                llm_summary["unexecuted_total"] += 1
+                summary["unexecuted_total"] += 1
+
         for row in per_combo_rows:
-            label = str(row["llm_model__model"])
-            llm_summary = llm_summary_map.setdefault(
+            label = str(row[label_field])
+            summary = summary_map.setdefault(
                 label,
                 {"total": 0, "executed_total": 0, "unexecuted_total": 0, "success": 0.0, "exec_time_sum": 0.0},
             )
-            llm_summary["executed_total"] += 1
-            llm_summary["success"] += float(row["success"] or 0.0)
-            llm_summary["exec_time_sum"] += float(row["avg_exec_time"] or 0.0)
+            summary["executed_total"] += 1
+            summary["success"] += float(row["success"] or 0.0)
+            summary["exec_time_sum"] += float(row["avg_exec_time"] or 0.0)
 
         summary_rows: list[dict[str, object]] = []
-        for label, llm_summary in llm_summary_map.items():
-            total = int(llm_summary["total"])
-            executed_total = int(llm_summary["executed_total"])
-            unexecuted_total = int(llm_summary["unexecuted_total"])
-            success = float(llm_summary["success"])
-            avg_exec_time = (float(llm_summary["exec_time_sum"]) / executed_total) if executed_total else 0.0
+        for label, summary in summary_map.items():
+            total = int(summary["total"])
+            executed_total = int(summary["executed_total"])
+            unexecuted_total = int(summary["unexecuted_total"])
+            success = float(summary["success"])
+            avg_exec_time = (float(summary["exec_time_sum"]) / executed_total) if executed_total else 0.0
             summary_rows.append(
                 {
                     "label": label,
@@ -170,6 +171,16 @@ class ResultAdmin(admin.ModelAdmin):
         summary_rows.sort(key=lambda row: (-float(row["success"]), float(row["avg_exec_time"]), str(row["label"])))
         return summary_rows
 
+    @classmethod
+    def summary_by_llm(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
+        """指定クエリの結果をLLM単位で集計する。"""
+        return cls._summary_by_dimension(queryset, "llm_model__model")
+
+    @classmethod
+    def summary_by_group(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
+        """指定クエリの結果をグループ単位で集計する。"""
+        return cls._summary_by_dimension(queryset, "group__name")
+
     def changelist_view(self, request: HttpRequest, extra_context: dict[str, object] | None = None) -> HttpResponse:
         """一覧画面に集計サマリーを追加する。"""
         response = super().changelist_view(request, extra_context=extra_context)
@@ -183,6 +194,7 @@ class ResultAdmin(admin.ModelAdmin):
 
         filtered_results = changelist.queryset
         context["summary_all_by_llm"] = self.summary_by_llm(filtered_results)
+        context["summary_all_by_group"] = self.summary_by_group(filtered_results)
         return response
 
     def formfield_for_dbfield(
