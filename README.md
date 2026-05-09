@@ -13,16 +13,31 @@
 
 ## 使用方法
 
-### 準備
+### 前提条件
 
-`uv`をインストールし、`uv tool install taskipy`でtaskipyをインストールしておいてください。
-以下でDBを初期化します。
+- Python `3.14` 以上
+- `uv`
+- `taskipy`（`uv tool install taskipy`）
+- `.env`（`.env.sample` をコピーして作成）
+
+```sh
+cp .env.sample .env
+```
+
+`.env` には少なくとも以下を設定してください。
+
+- `DJANGO_SUPERUSER_PASSWORD`（`task init_db` で作成する管理ユーザー `admin` のパスワード）
+- 実行したい `LlmModel.api_key_name` に対応するAPIキー環境変数
+
+### 初期化
+
+以下でDB初期化・管理ユーザー作成・初期データ投入を行います。
 
 ```sh
 task init_db
 ```
 
-下記でtailwindを初期化してください。
+初回のみ、Tailwindを初期化します。
 
 ```sh
 task manage tailwind install
@@ -30,13 +45,27 @@ task manage tailwind install
 
 ### 実行方法
 
-下記を実行し、`http://localhost:8000`を開いてください。
+以下のようにDjangoを起動します。
 
 ```sh
 task manage runserver
-# あるいは
+```
+
+参考:
+
+以下のようにするとDjangoとTailwindの監視を同時に起動します。デザインの開発時に便利です。
+
+```sh
 task manage tailwind dev
 ```
+
+その後、`http://localhost:8000/admin/` を開いて `admin` でログインしてください。
+
+### ベンチマーク実行手順
+
+1. テストグループ画面で対象グループを選択
+2. アクション `選択したテストグループでベンチマークを実行` を実行
+3. テスト結果画面で結果を確認
 
 ## データモデル
 
@@ -64,7 +93,7 @@ task manage tailwind dev
 ```sh
 task manage makemigrations
 task manage migrate
-``
+```
 
 ## ユーティリティ
 
