@@ -16,11 +16,19 @@
             <table class="w-full border-collapse text-sm">
               <thead>
                 <tr class="border-b border-gray-300">
-                  <th class="px-2 py-2 text-left">LLMモデル</th>
-                  <th class="px-2 py-2 text-right">成功率</th>
-                  <th class="px-2 py-2 text-right">未実行率</th>
-                  <th class="px-2 py-2 text-right">正解/総数</th>
-                  <th class="px-2 py-2 text-right">平均秒</th>
+                  <th class="px-2 py-2">LLMモデル</th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">正解率</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">正解/総数</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">平均秒</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">未実行率</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -28,11 +36,11 @@
                   <tr class="border-b border-gray-100">
                     <td class="px-2 py-2">{{ row.label }}</td>
                     <td class="px-2 py-2 text-right">{{ row.accuracy|floatformat:1 }}%</td>
-                    <td class="px-2 py-2 text-right">{{ row.unexecuted_ratio|floatformat:1 }}%</td>
                     <td class="px-2 py-2 text-right">
                       {{ row.success|floatformat:2 }} / {{ row.total }}
                     </td>
                     <td class="px-2 py-2 text-right">{{ row.avg_exec_time|floatformat:2 }}</td>
+                    <td class="px-2 py-2 text-right">{{ row.unexecuted_ratio|floatformat:1 }}%</td>
                   </tr>
                 {% empty %}
                   <tr>
@@ -49,11 +57,19 @@
             <table class="w-full border-collapse text-sm">
               <thead>
                 <tr class="border-b border-gray-300">
-                  <th class="px-2 py-2 text-left">テストグループ</th>
-                  <th class="px-2 py-2 text-right">成功率</th>
-                  <th class="px-2 py-2 text-right">未実行率</th>
-                  <th class="px-2 py-2 text-right">正解/総数</th>
-                  <th class="px-2 py-2 text-right">平均秒</th>
+                  <th class="px-2 py-2">テストグループ</th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">正解率</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">正解/総数</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">平均秒</span>
+                  </th>
+                  <th class="px-2 py-2">
+                    <span class="block text-right">未実行率</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -61,11 +77,11 @@
                   <tr class="border-b border-gray-100">
                     <td class="px-2 py-2">{{ row.label }}</td>
                     <td class="px-2 py-2 text-right">{{ row.accuracy|floatformat:1 }}%</td>
-                    <td class="px-2 py-2 text-right">{{ row.unexecuted_ratio|floatformat:1 }}%</td>
                     <td class="px-2 py-2 text-right">
                       {{ row.success|floatformat:2 }} / {{ row.total }}
                     </td>
                     <td class="px-2 py-2 text-right">{{ row.avg_exec_time|floatformat:2 }}</td>
+                    <td class="px-2 py-2 text-right">{{ row.unexecuted_ratio|floatformat:1 }}%</td>
                   </tr>
                 {% empty %}
                   <tr>
