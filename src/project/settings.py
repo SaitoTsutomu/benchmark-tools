@@ -1,3 +1,5 @@
+import os
+from ast import literal_eval
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -11,9 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-l6et0%$5mdn3*&-ajw7l(6%iyp9rhw5q=hj5y918a-8$z*5gvp"  # noqa: S105
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+DEBUG = literal_eval(os.environ.get("DEBUG", "False"))
+ALLOWED_HOSTS = ["127.0.0.1", os.environ.get("ALLOWED_HOST", "localhost")]
 
 
 # Application definition
