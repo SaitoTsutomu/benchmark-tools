@@ -125,9 +125,13 @@ class ResultAdmin(admin.ModelAdmin):
             success=Avg("judge"),
             avg_exec_time=Avg("exec_time"),
         )
-        per_combo_rows = queryset.filter(judge__isnull=False).values("group_id", "item_id", label_field).annotate(
-            success=Avg("judge"),
-            avg_exec_time=Avg("exec_time"),
+        per_combo_rows = (
+            queryset.filter(judge__isnull=False)
+            .values("group_id", "item_id", label_field)
+            .annotate(
+                success=Avg("judge"),
+                avg_exec_time=Avg("exec_time"),
+            )
         )
         summary_map: dict[str, dict[str, float | int]] = {}
         for row in all_combo_rows:
