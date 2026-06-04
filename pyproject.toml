@@ -23,6 +23,8 @@ dev = [
   "pytest-django>=4.12",
   "litellm>=1.83.7",
   "django>=6.0.5",
+  "starlette>=1.0.1", # for audit
+  "pyjwt>=2.13.0", # for audit
 ]
 
 [tool.taskipy.tasks]
@@ -30,7 +32,6 @@ init_db = "task manage migrate && task manage createsuperuser --noinput --userna
 jupyter = "uv run --env-file .env jupyter lab -y nbs"
 lint = "pyrefly check src && ruff check"
 manage = "uv run --env-file ../.env --directory src ./manage.py"
-pip-audit = "uv run -w pip-audit pip-audit"
 test = "uv run --env-file .env pytest --disable-warnings"
 
 [tool.uv]
