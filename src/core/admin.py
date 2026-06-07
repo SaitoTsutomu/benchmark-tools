@@ -99,12 +99,12 @@ class GroupAdmin(admin.ModelAdmin):
         if summary.failed_requests:
             self.message_user(
                 request,
-                f"ベンチマークを実行しました。成功: {summary.created_results}件 / 失敗: {summary.failed_requests}件",
+                f"ベンチマークを実行しました。全 {summary.created_results} 件中、失敗 {summary.failed_requests} 件",
                 level=messages.WARNING,
             )
             return
 
-        self.message_user(request, f"ベンチマークを実行しました。成功: {summary.created_results}件")
+        self.message_user(request, f"ベンチマークを実行しました。全 {summary.created_results} 件")
 
 
 @admin.register(Result)

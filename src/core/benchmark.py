@@ -1,12 +1,17 @@
 import os
+import re
 import subprocess  # noqa: S404
 from dataclasses import dataclass
+from logging import getLogger
+from pathlib import Path
 from time import perf_counter
 
 from agents import Agent, Runner
 from agents.extensions.models.litellm_model import LitellmModel
 
 from core.models import Group, Item, LlmModel, Result
+
+logger = getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -54,12 +59,15 @@ def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
 
 def run_code(code: str) -> tuple[int, str, str]:
     """コード実行"""
-    result = subprocess.run(
+    # src/dataをマウントしてdockerから使えるようにする
+    result = subprocess.run(  # noqa: S603
         [  # noqa: S607
             "docker",
             "run",
             "-i",
             "--rm",
+            "-v",
+            f"{Path.cwd()}/data:/app/data",
             "--user",
             "1000:1000",
             "--read-only",
@@ -90,10 +98,11 @@ def check_judge(answer_code: str, answer: str, result: str) -> bool:
     if not answer_code:
         return answer in _normalize_text(result)
 
-    returncode, actual, stderr = run_code(result)
+    code = re.sub(r"^```(|python)$", "", result, flags=re.MULTILINE)
+    returncode, actual, stderr = run_code(code)
     if returncode or stderr:
         msg = f"実行エラー {returncode} {stderr}"
-        raise RuntimeError(msg)
+        raise BenchmarkExecutionError(msg)
     _, expected, _ = run_code(answer_code)
     return actual == expected
 
@@ -118,7 +127,8 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
                     judge = check_judge(item.answer_code, answer, result)
-                except BenchmarkExecutionError:
+                except BenchmarkExecutionError as e:
+                    logger.warning(str(e))
                     failed_requests += 1
                 Result.objects.create(
                     group=group,

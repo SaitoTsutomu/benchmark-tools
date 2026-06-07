@@ -6,6 +6,7 @@ nbs/
 .ruff_cache/
 .DS_Store
 Untitled*.ipynb
+src/static/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
