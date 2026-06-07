@@ -32,6 +32,7 @@ init_db = "task manage migrate && task manage createsuperuser --noinput --userna
 jupyter = "uv run --env-file .env jupyter lab -y nbs"
 lint = "pyrefly check src && ruff check"
 manage = "uv run --env-file ../.env --directory src ./manage.py"
+run = "docker run -i --rm --user 1000:1000 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --network none --memory=256m --cpus=1 --pids-limit=64 --cap-drop=ALL --security-opt=no-new-privileges --security-opt=apparmor=docker-default sandbox"
 test = "uv run --env-file .env pytest --disable-warnings"
 
 [tool.uv]
@@ -63,6 +64,7 @@ src = ["src"]
 [tool.ruff.lint]
 ignore = [
   "ANN401",
+  "COM812",
   "CPY",
   "D10",
   "D203",

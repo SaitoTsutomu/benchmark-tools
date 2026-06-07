@@ -1,4 +1,5 @@
 import os
+import subprocess  # noqa: S404
 from dataclasses import dataclass
 from time import perf_counter
 
@@ -48,7 +49,53 @@ def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
     start = perf_counter()
     result = Runner.run_sync(agent, item.problem)
     exec_time = perf_counter() - start
-    return _normalize_text(result.final_output), exec_time
+    return result.final_output, exec_time
+
+
+def run_code(code: str) -> tuple[int, str, str]:
+    """コード実行"""
+    result = subprocess.run(
+        [  # noqa: S607
+            "docker",
+            "run",
+            "-i",
+            "--rm",
+            "--user",
+            "1000:1000",
+            "--read-only",
+            "--tmpfs",
+            "/tmp:rw,noexec,nosuid,size=64m",  # noqa: S108
+            "--network",
+            "none",
+            "--memory=256m",
+            "--cpus=1",
+            "--pids-limit=64",
+            "--cap-drop=ALL",
+            "--security-opt=no-new-privileges",
+            "--security-opt=apparmor=docker-default",
+            "sandbox",
+            "python",
+            "-",
+        ],
+        input=code,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode, result.stdout, result.stderr
+
+
+def check_judge(answer_code: str, answer: str, result: str) -> bool:
+    """判定"""
+    if not answer_code:
+        return answer in _normalize_text(result)
+
+    returncode, actual, stderr = run_code(result)
+    if returncode or stderr:
+        msg = f"実行エラー {returncode} {stderr}"
+        raise RuntimeError(msg)
+    _, expected, _ = run_code(answer_code)
+    return actual == expected
 
 
 def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
@@ -70,7 +117,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 judge = None
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
-                    judge = answer in result
+                    judge = check_judge(item.answer_code, answer, result)
                 except BenchmarkExecutionError:
                     failed_requests += 1
                 Result.objects.create(

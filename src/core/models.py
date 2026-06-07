@@ -1,6 +1,7 @@
 from typing import Any, ClassVar
 
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -44,14 +45,22 @@ class Item(TimestampedModel):
     """テスト項目"""
 
     name = models.CharField("名前", max_length=255, unique=True)
+    title = models.CharField("タイトル", max_length=255)
     problem = models.TextField("問題")
-    answer = models.TextField("正解")
+    answer_code = models.TextField("正解コード", blank=True, help_text="answerより優先")
+    answer = models.TextField("正解", blank=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "テスト項目"
+        constraints = (
+            models.CheckConstraint(
+                condition=~(Q(answer_code="") & Q(answer="")),
+                name="answer_code_and_answer_is_not_empty",
+            ),
+        )
 
     def __str__(self) -> str:
-        return self.name
+        return self.title
 
 
 class Group(TimestampedModel):
@@ -70,10 +79,10 @@ class GroupLlmModel(TimestampedModel):
     """テストグループが実施するLLMモデル"""
 
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="テストグループ",
+        Group, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="テストグループ"
     )
     llm_model = models.ForeignKey(
-        LlmModel, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="LLMモデル",
+        LlmModel, on_delete=models.CASCADE, related_name="group_llm_models", verbose_name="LLMモデル"
     )
 
     class Meta:
@@ -92,7 +101,7 @@ class GroupItem(TimestampedModel):
     """テストグループが実施するテスト項目"""
 
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ",
+        Group, on_delete=models.CASCADE, related_name="group_items", verbose_name="テストグループ"
     )
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="group_items", verbose_name="テスト項目")
 
