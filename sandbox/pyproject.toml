@@ -1,0 +1,13 @@
+[project]
+dependencies = [
+  "polars[numpy,pandas,plot,pyarrow]>=1.41.2",
+]
+description = ""
+name = "sandbox"
+readme = "README.md"
+requires-python = ">=3.14"
+version = "0.1.0"
+
+[tool.taskipy.tasks]
+build = "uv lock && docker build -t sandbox ."
+run = "docker run -i --rm --user 1000:1000 --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --network none --memory=256m --cpus=1 --pids-limit=64 --cap-drop=ALL --security-opt=no-new-privileges --security-opt=apparmor=docker-default sandbox"
