@@ -28,7 +28,7 @@ class LlmModelAdmin(admin.ModelAdmin):
 class ItemAdmin(admin.ModelAdmin):
     """テスト項目"""
 
-    list_display = ("name", "updated_at")
+    list_display = ("name", "title", "updated_at")
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name", "problem", "answer")
     ordering = ("name",)

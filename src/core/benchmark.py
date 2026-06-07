@@ -54,6 +54,7 @@ def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
     start = perf_counter()
     result = Runner.run_sync(agent, item.problem)
     exec_time = perf_counter() - start
+    logger.info("Executed %s %s", item.name, item.title)
     return result.final_output, exec_time
 
 
