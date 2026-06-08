@@ -19,12 +19,8 @@ version = "0.1.0"
 dev = [
   "django-stubs>=6.0",
   "jupyter>=1.1.1",
-  "polars[numpy,pandas,plot,pyarrow]>=1.40",
+  "polars[numpy,pandas,plot,pyarrow]>=1.41",
   "pytest-django>=4.12",
-  "litellm>=1.83.7",
-  "django>=6.0.5",
-  "starlette>=1.0.1", # for audit
-  "pyjwt>=2.13.0", # for audit
 ]
 
 [tool.taskipy.tasks]

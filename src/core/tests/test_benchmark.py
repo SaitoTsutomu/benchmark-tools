@@ -28,10 +28,13 @@ def group() -> Group:
 @patch("core.benchmark.Runner.run_sync")
 def test_run_group_benchmark_creates_results(run_sync_mock: Mock, getenv_mock: Mock, group: Group) -> None:
     """正常系でResultが作成されることを検証する"""
+    # Arrange
     run_sync_mock.return_value = SimpleNamespace(final_output="2")
 
+    # Act
     summary = run_group_benchmark([group])
 
+    # Assert
     assert summary.created_results == 1
     assert summary.failed_requests == 0
     assert Result.objects.count() == 1
@@ -43,18 +46,24 @@ def test_run_group_benchmark_creates_results(run_sync_mock: Mock, getenv_mock: M
 @patch("core.benchmark.os.getenv", return_value="")
 def test_run_group_benchmark_raises_integrity_error_when_api_key_missing(getenv_mock: Mock, group: Group) -> None:
     """APIキー未設定時にResult保存でIntegrityErrorになることを検証する"""
+    # Act & Assert
     with pytest.raises(IntegrityError):
         run_group_benchmark([group])
+
+    # Assert
     getenv_mock.assert_called()
 
 
 @pytest.mark.django_db
 def test_run_group_benchmark_skips_when_no_models(group: Group) -> None:
     """LLMモデル未紐付け時はスキップされることを検証する"""
+    # Arrange
     GroupLlmModel.objects.all().delete()
 
+    # Act
     summary = run_group_benchmark([group])
 
+    # Assert
     assert summary.created_results == 0
     assert summary.failed_requests == 0
     assert Result.objects.count() == 0

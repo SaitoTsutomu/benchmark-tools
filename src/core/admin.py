@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING
 from django import forms
 from django.contrib import admin, messages
 from django.db.models import Avg, Count, QuerySet
+from django.shortcuts import redirect
+from django.urls import path, reverse
+from django.utils.html import format_html
 
 from core.benchmark import BenchmarkExecutionError, run_group_benchmark
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
@@ -11,6 +14,7 @@ if TYPE_CHECKING:
     from django.db import models
     from django.http import HttpRequest
     from django.http.response import HttpResponse
+    from django.urls.resolvers import URLPattern
 
 
 @admin.register(LlmModel)
@@ -56,12 +60,24 @@ class GroupLlmModelInline(admin.TabularInline):
 class GroupAdmin(admin.ModelAdmin):
     """テストグループ"""
 
-    list_display = ("name", "llm_model_count", "item_count", "updated_at")
+    list_display = ("name", "llm_model_count", "item_count", "updated_at", "display_run")
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
     inlines = (GroupLlmModelInline, GroupItemInline)
     actions = ("run_benchmark",)
+
+    def get_urls(self) -> list[URLPattern]:
+        """管理画面用の追加URLを返す"""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:object_id>/run-benchmark/",
+                self.admin_site.admin_view(self.run_benchmark_view),
+                name="core_group_run_benchmark",
+            ),
+        ]
+        return custom_urls + urls
 
     def get_queryset(self, request: HttpRequest) -> QuerySet[Group]:
         """一覧表示用のクエリセットを取得する"""
@@ -83,18 +99,31 @@ class GroupAdmin(admin.ModelAdmin):
         """グループ内のテスト項目数を返す"""
         return int(obj.item_count)
 
+    @classmethod
+    @admin.display(description="実行")
+    def display_run(cls, obj: Group) -> str:
+        """実行のリンク"""
+        url = reverse("admin:core_group_run_benchmark", args=(obj.pk,))
+        return format_html('<a href="{}">実行</a>', url)
+
+    def run_benchmark_view(self, request: HttpRequest, object_id: int) -> HttpResponse:
+        """指定グループのベンチマークを実行する"""
+        queryset = self.get_queryset(request).filter(pk=object_id)
+        response = self.run_benchmark(request, queryset)
+        return response or redirect("admin:core_group_changelist")
+
     @admin.action(description="選択したテストグループでベンチマークを実行")
-    def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Group]) -> None:
+    def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Group]) -> HttpResponse | None:
         """選択したテストグループでベンチマークを実行"""
         try:
             summary = run_group_benchmark(list(queryset))
         except BenchmarkExecutionError as exc:
             self.message_user(request, str(exc), level=messages.ERROR)
-            return
+            return None
 
         if summary.created_results == 0 and summary.failed_requests == 0:
             self.message_user(request, "実行対象のテスト項目がありません。", level=messages.WARNING)
-            return
+            return None
 
         if summary.failed_requests:
             self.message_user(
@@ -102,9 +131,13 @@ class GroupAdmin(admin.ModelAdmin):
                 f"ベンチマークを実行しました。全 {summary.created_results} 件中、失敗 {summary.failed_requests} 件",
                 level=messages.WARNING,
             )
-            return
+        else:
+            self.message_user(request, f"ベンチマークを実行しました。全 {summary.created_results} 件")
 
-        self.message_user(request, f"ベンチマークを実行しました。全 {summary.created_results} 件")
+        query: dict[str, int] = {}
+        if queryset.count() == 1:
+            query["group__id__exact"] = queryset.first().id
+        return redirect(reverse("admin:core_result_changelist", query=query))
 
 
 @admin.register(Result)
