@@ -27,6 +27,7 @@ class BenchmarkExecutionError(Exception):
 
 
 def normalize_text(value: str) -> str:
+    """ホワイトスペースを正規化"""
     return " ".join(value.strip().split())
 
 
