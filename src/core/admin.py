@@ -5,9 +5,10 @@ from django.contrib import admin, messages
 from django.db.models import Avg, Count, QuerySet
 from django.shortcuts import redirect
 from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.html import format_html
 
-from core.benchmark import BenchmarkExecutionError, run_group_benchmark
+from core.benchmark import BenchmarkExecutionError, check_judge, normalize_text, run_group_benchmark
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 if TYPE_CHECKING:
@@ -116,7 +117,7 @@ class GroupAdmin(admin.ModelAdmin):
     def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Group]) -> HttpResponse | None:
         """選択したテストグループでベンチマークを実行"""
         try:
-            summary = run_group_benchmark(list(queryset))
+            summary = run_group_benchmark([*queryset])
         except BenchmarkExecutionError as exc:
             self.message_user(request, str(exc), level=messages.ERROR)
             return None
@@ -150,6 +151,7 @@ class ResultAdmin(admin.ModelAdmin):
     search_fields = ("group__name", "item__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
+    actions = ("run_check_judge",)
 
     @classmethod
     def _summary_by_dimension(cls, queryset: QuerySet[Result], label_field: str) -> list[dict[str, object]]:
@@ -248,3 +250,15 @@ class ResultAdmin(admin.ModelAdmin):
     @admin.display(ordering="exec_time", description="実行時間")
     def display_exec_time(self, obj: Result) -> str:
         return f"{obj.exec_time:.1f}"
+
+    @admin.action(description="選択したテスト結果を再判定")
+    def run_check_judge(self, request: HttpRequest, queryset: QuerySet[Result]) -> None:
+        """選択したテスト結果を再判定"""
+        results = [*queryset]
+        for result in results:
+            item = result.item
+            answer = normalize_text(item.answer)
+            result.judge = check_judge(item.answer_code, answer, result.result)
+        Result.objects.bulk_update(results, ["judge"])
+        queryset.update(updated_at=timezone.now())
+        self.message_user(request, f"{len(queryset)}件再判定しました")

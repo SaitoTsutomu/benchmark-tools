@@ -26,7 +26,7 @@ class BenchmarkExecutionError(Exception):
     """ベンチマーク実行時の業務エラー"""
 
 
-def _normalize_text(value: str) -> str:
+def normalize_text(value: str) -> str:
     return " ".join(value.strip().split())
 
 
@@ -97,7 +97,7 @@ def run_code(code: str) -> tuple[int, str, str]:
 def check_judge(answer_code: str, answer: str, result: str) -> bool:
     """判定"""
     if not answer_code:
-        return answer in _normalize_text(result)
+        return answer in normalize_text(result)
 
     code = re.sub(r"^```(|python)$", "", result, flags=re.MULTILINE)
     returncode, actual, stderr = run_code(code)
@@ -120,7 +120,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
             continue
 
         for item in items:
-            answer = _normalize_text(item.answer)
+            answer = normalize_text(item.answer)
             for llm_model in llm_models:
                 result = ""
                 exec_time = float("nan")
