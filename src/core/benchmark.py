@@ -102,8 +102,8 @@ def check_judge(answer_code: str, answer: str, result: str) -> bool:
     code = re.sub(r"^```(|python)$", "", result, flags=re.MULTILINE)
     returncode, actual, stderr = run_code(code)
     if returncode or stderr:
-        msg = f"実行エラー {returncode} {stderr}"
-        raise BenchmarkExecutionError(msg)
+        logger.warning("実行エラー %s %s", returncode, stderr)
+        return False
     _, expected, _ = run_code(answer_code)
     return actual == expected
 

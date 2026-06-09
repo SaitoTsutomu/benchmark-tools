@@ -144,7 +144,7 @@ class GroupAdmin(admin.ModelAdmin):
 class ResultAdmin(admin.ModelAdmin):
     """テスト結果"""
 
-    list_display = ("group", "item", "llm_model", "judge", "updated_at")
+    list_display = ("group", "item", "llm_model", "judge", "display_exec_time", "updated_at")
     readonly_fields = ("updated_at", "created_at")
     list_filter = ("group", "llm_model", "judge")
     search_fields = ("group__name", "item__name", "llm_model__model")
@@ -244,3 +244,7 @@ class ResultAdmin(admin.ModelAdmin):
         if db_field.name == "result":
             kwargs["widget"] = forms.Textarea(attrs={"rows": 8, "cols": 72})
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    @admin.display(ordering="exec_time", description="実行時間")
+    def display_exec_time(self, obj: Result) -> str:
+        return f"{obj.exec_time:.1f}"
