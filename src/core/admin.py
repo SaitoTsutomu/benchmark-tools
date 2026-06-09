@@ -8,7 +8,12 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
-from core.benchmark import BenchmarkExecutionError, check_judge, normalize_text, run_group_benchmark
+from core.benchmark import (
+    BenchmarkExecutionError,
+    check_judge,
+    normalize_text,
+    run_group_benchmark,
+)
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 if TYPE_CHECKING:
@@ -247,8 +252,9 @@ class ResultAdmin(admin.ModelAdmin):
             kwargs["widget"] = forms.Textarea(attrs={"rows": 8, "cols": 72})
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
+    @classmethod
     @admin.display(ordering="exec_time", description="実行時間")
-    def display_exec_time(self, obj: Result) -> str:
+    def display_exec_time(cls, obj: Result) -> str:
         return f"{obj.exec_time:.1f}"
 
     @admin.action(description="選択したテスト結果を再判定")
