@@ -47,7 +47,8 @@ class Item(TimestampedModel):
     name = models.CharField("名前", max_length=255, unique=True)
     title = models.CharField("タイトル", max_length=255)
     problem = models.TextField("問題")
-    answer_code = models.TextField("正解コード", blank=True, help_text="answerより優先")
+    answer_code = models.TextField("正解コード", blank=True, help_text="re_outputより優先")
+    re_output = models.TextField("出力(正規表現)", blank=True, help_text="answerより優先")
     answer = models.TextField("正解", blank=True)
 
     class Meta:
@@ -123,7 +124,7 @@ class Result(TimestampedModel):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="results", verbose_name="テストグループ")
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="results", verbose_name="テスト項目")
     llm_model = models.ForeignKey(LlmModel, on_delete=models.CASCADE, related_name="results", verbose_name="LLMモデル")
-    result = models.CharField("解答", max_length=255)
+    result = models.TextField("解答")
     exec_time = models.FloatField("実行時間")
     judge = models.BooleanField("判定結果", null=True)
 

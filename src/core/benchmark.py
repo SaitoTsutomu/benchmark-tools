@@ -95,16 +95,20 @@ def run_code(code: str) -> tuple[int, str, str]:
     return result.returncode, result.stdout, result.stderr
 
 
-def check_judge(answer_code: str, answer: str, result: str) -> bool:
+def check_judge(answer_code: str, re_output: str, answer: str, result: str) -> bool:
     """判定"""
-    if not answer_code:
+    if not answer_code and not re_output:
         return answer in normalize_text(result)
 
-    code = re.sub(r"^```(|python)$", "", result, flags=re.MULTILINE)
+    code = re.sub(r"^```(python)?", "", result, flags=re.MULTILINE)
     returncode, actual, stderr = run_code(code)
     if returncode or stderr:
         logger.warning("実行エラー %s %s", returncode, stderr)
         return False
+
+    if re_output:
+        return all(re.search(s, actual) for s in re_output.splitlines())
+
     _, expected, _ = run_code(answer_code)
     return actual == expected
 
@@ -128,7 +132,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 judge = None
                 try:
                     result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
-                    judge = check_judge(item.answer_code, answer, result)
+                    judge = check_judge(item.answer_code, item.re_output, answer, result)
                 except BenchmarkExecutionError as e:
                     logger.warning(str(e))
                     failed_requests += 1

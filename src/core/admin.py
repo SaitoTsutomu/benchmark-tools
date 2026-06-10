@@ -264,7 +264,7 @@ class ResultAdmin(admin.ModelAdmin):
         for result in results:
             item = result.item
             answer = normalize_text(item.answer)
-            result.judge = check_judge(item.answer_code, answer, result.result)
+            result.judge = check_judge(item.answer_code, item.re_output, answer, result.result)
         Result.objects.bulk_update(results, ["judge"])
         queryset.update(updated_at=timezone.now())
         self.message_user(request, f"{len(queryset)}件再判定しました")
