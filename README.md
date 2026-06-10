@@ -103,14 +103,10 @@ task manage migrate
 task lint
 ```
 
+※ `pyrefly`と`ruff`が必要
+
 ### test（単体テスト）
 
 ```sh
 task test
-```
-
-### pip-audit（脆弱性確認）
-
-```sh
-task pip-audit
 ```

@@ -24,7 +24,7 @@ dev = [
 ]
 
 [tool.taskipy.tasks]
-init_db = "task manage migrate && task manage createsuperuser --noinput --username admin --email '' && task manage loaddata core/fixtures/study_polars2.jsonl && task manage loaddata core/fixtures/llm_model.jsonl"
+init_db = "task manage migrate && task manage createsuperuser --noinput --username admin --email '' && task manage loaddata core/fixtures/data.jsonl"
 jupyter = "uv run --env-file .env jupyter lab -y nbs"
 lint = "pyrefly check src && ruff check"
 manage = "uv run --env-file ../.env --directory src ./manage.py"
