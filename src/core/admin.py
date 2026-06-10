@@ -1,7 +1,9 @@
+from logging import getLogger
 from typing import TYPE_CHECKING
 
 from django import forms
 from django.contrib import admin, messages
+from django.db import IntegrityError, transaction
 from django.db.models import Avg, Count, QuerySet
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -21,6 +23,8 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from django.http.response import HttpResponse
     from django.urls.resolvers import URLPattern
+
+logger = getLogger(__name__)
 
 
 @admin.register(LlmModel)
@@ -42,6 +46,28 @@ class ItemAdmin(admin.ModelAdmin):
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name", "problem", "answer")
     ordering = ("name",)
+    actions = ("new_group",)
+
+    @admin.action(description="選択したテスト項目で新しいグループを作成")
+    def new_group(self, request: HttpRequest, queryset: QuerySet[Item]) -> HttpResponse | None:
+        """選択したテスト項目で新しいグループを作成"""
+        max_attempts = 100
+        for i in range(max_attempts):
+            name = f"New Group{i}"
+            try:
+                with transaction.atomic():
+                    group = Group.objects.create(name=name)
+                    objs = [GroupItem(group=group, item=item) for item in queryset]
+                    GroupItem.objects.bulk_create(objs)
+                break
+            except IntegrityError:
+                continue
+        else:
+            self.message_user(request, "新しいグループを作成できませんでした", level=messages.ERROR)
+            return None
+
+        self.message_user(request, "新しいグループを作成しました", level=messages.SUCCESS)
+        return redirect("admin:core_group_change", object_id=group.id)
 
 
 class GroupItemInline(admin.TabularInline):
