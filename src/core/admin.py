@@ -77,6 +77,7 @@ class GroupItemInline(admin.TabularInline):
     extra = 0
     autocomplete_fields = ("item",)
     readonly_fields = ("updated_at", "created_at")
+    classes = ("collapse",)
 
 
 class GroupLlmModelInline(admin.TabularInline):
@@ -86,6 +87,7 @@ class GroupLlmModelInline(admin.TabularInline):
     extra = 0
     autocomplete_fields = ("llm_model",)
     readonly_fields = ("updated_at", "created_at")
+    classes = ("collapse",)
 
 
 @admin.register(Group)
