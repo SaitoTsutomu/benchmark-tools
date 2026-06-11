@@ -31,11 +31,52 @@ logger = getLogger(__name__)
 class LlmModelAdmin(admin.ModelAdmin):
     """LLMモデル"""
 
-    list_display = ("model", "base_url", "api_key_name", "can_parallel", "updated_at")
+    list_display = (
+        "name",
+        "model",
+        "base_url",
+        "api_key_name",
+        "can_execute_python",
+        "updated_at",
+    )
     readonly_fields = ("updated_at", "created_at")
-    list_filter = ("can_parallel",)
-    search_fields = ("model", "base_url", "api_key_name")
-    ordering = ("model",)
+    list_filter = ("can_execute_python", "can_parallel")
+    search_fields = ("name", "model", "base_url", "api_key_name")
+    ordering = ("name", "model")
+    actions = ("new_llm_model",)
+
+    @admin.action(description="選択したLLMモデルを複製")
+    def new_llm_model(self, request: HttpRequest, queryset: QuerySet[LlmModel]) -> HttpResponse | None:
+        """選択したLLMモデルを複製"""
+        if queryset.count() != 1:
+            self.message_user(request, "1つだけ選択してください", level=messages.WARNING)
+            return None
+
+        src_llm_model = queryset.first()
+        tgt_llm_model: LlmModel | None = None
+        if src_llm_model:
+            max_attempts = 100
+            for i in range(max_attempts):
+                name = f"{src_llm_model.name} copy {i + 1}"
+                try:
+                    tgt_llm_model = LlmModel.objects.create(
+                        name=name,
+                        model=src_llm_model.model,
+                        base_url=src_llm_model.base_url,
+                        api_key_name=src_llm_model.api_key_name,
+                        can_execute_python=src_llm_model.can_execute_python,
+                        can_parallel=src_llm_model.can_parallel,
+                    )
+                    break
+                except IntegrityError:
+                    continue
+
+        if tgt_llm_model is None:
+            self.message_user(request, "LLMモデルを複製できませんでした", level=messages.ERROR)
+            return None
+
+        self.message_user(request, "LLMモデルを複製しました", level=messages.SUCCESS)
+        return redirect("admin:core_llmmodel_change", object_id=tgt_llm_model.id)
 
 
 @admin.register(Item)
@@ -181,7 +222,7 @@ class ResultAdmin(admin.ModelAdmin):
     list_display = ("group", "item", "llm_model", "judge", "display_exec_time", "updated_at")
     readonly_fields = ("updated_at", "created_at")
     list_filter = ("group", "llm_model", "judge")
-    search_fields = ("group__name", "item__name", "llm_model__model")
+    search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
     actions = ("run_check_judge",)
@@ -246,7 +287,7 @@ class ResultAdmin(admin.ModelAdmin):
     @classmethod
     def summary_by_llm(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:
         """指定クエリの結果をLLM単位で集計する。"""
-        return cls._summary_by_dimension(queryset, "llm_model__model")
+        return cls._summary_by_dimension(queryset, "llm_model__name")
 
     @classmethod
     def summary_by_group(cls, queryset: QuerySet[Result]) -> list[dict[str, object]]:

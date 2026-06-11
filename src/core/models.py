@@ -23,22 +23,20 @@ class TimestampedModel(models.Model):
 class LlmModel(TimestampedModel):
     """LLMモデル"""
 
-    model = models.CharField("モデル名", max_length=255, unique=True)
+    name = models.CharField("名前", max_length=255, unique=True)
+    model = models.CharField("モデル名", max_length=255)
     base_url = models.URLField("URL")
     api_key_name = models.CharField("APIキーの環境変数名", max_length=255, blank=True)
+    can_execute_python = models.BooleanField(
+        "ツール使用可", help_text="Pythonコードを実行できるかどうか", default=False
+    )
     can_parallel = models.BooleanField("並列実行可能か", default=False)
 
     class Meta:
         verbose_name = verbose_name_plural = "LLMモデル"
-        constraints: ClassVar[list[models.UniqueConstraint]] = [
-            models.UniqueConstraint(
-                fields=["model", "base_url"],
-                name="uniq_llmmodel_model_base_url",
-            ),
-        ]
 
     def __str__(self) -> str:
-        return self.model
+        return self.name
 
 
 class Item(TimestampedModel):

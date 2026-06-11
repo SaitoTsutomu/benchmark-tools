@@ -5,11 +5,15 @@ from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
 from time import perf_counter
+from typing import TYPE_CHECKING
 
-from agents import Agent, Runner
+from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
 
 from core.models import Group, Item, LlmModel, Result
+
+if TYPE_CHECKING:
+    from agents import Tool
 
 logger = getLogger(__name__)
 
@@ -43,15 +47,27 @@ def _resolve_api_key(llm_model: LlmModel) -> str:
     return api_key
 
 
+@function_tool
+def execute_python(code: str) -> str:
+    """Pythonコードを実行する"""
+    rc, stdout, stderr = run_code(code)
+    return f"returncode={rc}\n--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}"
+
+
 def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
     """単一ベンチマークを実行し、応答と実行時間を返す"""
+    tools: list[Tool] = []
+    instructions = "出力は常に解答のみ出力すること。出力に「```python」は不要。"
+    if llm_model.can_execute_python:
+        tools.append(execute_python)
+        instructions = (
+            f"作成したPythonコードをツールexecute_pythonで実行しエラーがないかを確認すること。"
+            "execute_pythonでは入力データは用意されている。"
+            f"{instructions}"
+        )
     api_key = _resolve_api_key(llm_model)
     model = LitellmModel(llm_model.model, base_url=llm_model.base_url, api_key=api_key)
-    agent = Agent(
-        name="Assistant",
-        model=model,
-        instructions="コードブロックは不要。出力は常に解答のみ出力すること",
-    )
+    agent = Agent(name="Assistant", model=model, tools=tools, instructions=instructions)
     start = perf_counter()
     result = Runner.run_sync(agent, item.problem)
     exec_time = perf_counter() - start
@@ -92,6 +108,7 @@ def run_code(code: str) -> tuple[int, str, str]:
         capture_output=True,
         check=False,
     )
+    logger.info("run_code \n--------\n%s\n--------\n", code[:500])
     return result.returncode, result.stdout, result.stderr
 
 

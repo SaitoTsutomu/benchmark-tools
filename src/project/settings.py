@@ -128,4 +128,9 @@ LOGGING = {
         "handlers": ["console"],
         "level": "INFO",
     },
+    "loggers": {
+        "LiteLLM": {
+            "level": "WARNING",
+        },
+    },
 }
