@@ -19,6 +19,7 @@
 - `uv`
 - `taskipy`（`uv tool install taskipy`）
 - `.env`（`.env.sample` をコピーして作成）
+- Dockerが使えること
 
 ```sh
 cp .env.sample .env
@@ -43,6 +44,16 @@ task init_db
 task manage tailwind install
 ```
 
+### Dockerイメージ作成
+
+初回のみ、Dockerイメージを作成します。
+
+```sh
+(cd sandbox; task build)
+```
+
+`sandbox`というイメージが作成されます。
+
 ### 実行方法
 
 以下のようにDjangoを起動します。
@@ -51,15 +62,15 @@ task manage tailwind install
 task manage runserver
 ```
 
+`http://localhost:8000/admin/` を開いて `admin` でログインしてください。
+
 参考:
 
-以下のようにするとDjangoとTailwindの監視を同時に起動します。デザインの開発時に便利です。
+以下のようにするとDjangoの起動とTailwindの監視を同時にします。デザインの開発時に便利です。
 
 ```sh
 task manage tailwind dev
 ```
-
-その後、`http://localhost:8000/admin/` を開いて `admin` でログインしてください。
 
 ### ベンチマーク実行手順
 
