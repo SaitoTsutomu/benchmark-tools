@@ -54,7 +54,7 @@ def execute_python(code: str) -> str:
     return f"returncode={rc}\n--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}"
 
 
-def _run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
+def run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
     """単一ベンチマークを実行し、応答と実行時間を返す"""
     tools: list[Tool] = []
     instructions = "出力は常に解答のみ出力すること。出力に「```python」は不要。"
@@ -85,7 +85,7 @@ def run_code(code: str) -> tuple[int, str, str]:
             "-i",
             "--rm",
             "-v",
-            f"{Path.cwd()}/data:/app/data",
+            f"{Path.cwd()}/data:/app/data:ro",
             "--user",
             "1000:1000",
             "--read-only",
@@ -148,7 +148,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 exec_time = float("nan")
                 judge = None
                 try:
-                    result, exec_time = _run_single_benchmark(item=item, llm_model=llm_model)
+                    result, exec_time = run_single_benchmark(item=item, llm_model=llm_model)
                     judge = check_judge(item.answer_code, item.re_output, answer, result)
                 except BenchmarkExecutionError as e:
                     logger.warning(str(e))

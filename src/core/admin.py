@@ -15,6 +15,7 @@ from core.benchmark import (
     check_judge,
     normalize_text,
     run_group_benchmark,
+    run_single_benchmark,
 )
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
@@ -86,7 +87,7 @@ class ItemAdmin(admin.ModelAdmin):
     list_display = ("name", "title", "updated_at")
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name", "problem", "answer")
-    ordering = ("name",)
+    ordering = ("pk",)
     actions = ("new_group",)
 
     @admin.action(description="選択したテスト項目で新しいグループを作成")
@@ -225,7 +226,7 @@ class ResultAdmin(admin.ModelAdmin):
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
-    actions = ("run_check_judge",)
+    actions = ("run_benchmark", "run_check_judge")
 
     @classmethod
     def _summary_by_dimension(cls, queryset: QuerySet[Result], label_field: str) -> list[dict[str, object]]:
@@ -325,6 +326,22 @@ class ResultAdmin(admin.ModelAdmin):
     @admin.display(ordering="exec_time", description="実行時間")
     def display_exec_time(cls, obj: Result) -> str:
         return f"{obj.exec_time:.1f}"
+
+    @admin.action(description="選択したテスト結果を再実行")
+    def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Result]) -> None:
+        """選択したテスト結果を再実行"""
+        results = [*queryset]
+        for result in results:
+            answer = normalize_text(result.item.answer)
+            try:
+                result.result, result.exec_time = run_single_benchmark(item=result.item, llm_model=result.llm_model)
+                result.judge = check_judge(result.item.answer_code, result.item.re_output, answer, result.result)
+            except BenchmarkExecutionError:
+                result.result, result.exec_time = "", float("nan")
+                result.judge = None
+        Result.objects.bulk_update(results, ["result", "exec_time", "judge"])
+        queryset.update(updated_at=timezone.now())
+        self.message_user(request, f"{len(queryset)}件再実行しました")
 
     @admin.action(description="選択したテスト結果を再判定")
     def run_check_judge(self, request: HttpRequest, queryset: QuerySet[Result]) -> None:

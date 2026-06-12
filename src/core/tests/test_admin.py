@@ -14,7 +14,7 @@ def test_result_admin_summary_averages_duplicate_records_per_group_item_llm() ->
     item1 = Item.objects.create(name="item-1", problem="q1", answer="a1")
     item2 = Item.objects.create(name="item-2", problem="q2", answer="a2")
     llm_model = LlmModel.objects.create(
-        model="model-a",
+        name="model-a",
         base_url="https://example.com/v1",
         api_key_name="DUMMY_API_KEY",
     )
