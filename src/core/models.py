@@ -26,7 +26,7 @@ class LlmModel(TimestampedModel):
     name = models.CharField("名前", max_length=255, unique=True)
     model = models.CharField("モデル名", max_length=255)
     description = models.TextField("説明", blank=True)
-    base_url = models.URLField("URL")
+    base_url = models.URLField("URL", blank=True)
     api_key_name = models.CharField("APIキーの環境変数名", max_length=255, blank=True)
     can_execute_python = models.BooleanField(
         "ツール使用可", help_text="Pythonコードを実行できるかどうか", default=False

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from agents import Agent, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
+from litellm.exceptions import AuthenticationError
 
 from core.models import Group, Item, LlmModel, Result
 
@@ -38,7 +39,7 @@ def normalize_text(value: str) -> str:
 def _resolve_api_key(llm_model: LlmModel) -> str:
     key_name = llm_model.api_key_name.strip()
     if not key_name:
-        return "_"
+        return ""
 
     api_key = os.getenv(key_name, "")
     if not api_key:
@@ -145,13 +146,16 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
             answer = normalize_text(item.answer)
             for llm_model in llm_models:
                 result = ""
-                exec_time = float("nan")
+                exec_time = float("inf")  # 未実行を意味する
                 judge = None
                 try:
                     result, exec_time = run_single_benchmark(item=item, llm_model=llm_model)
                     judge = check_judge(item.answer_code, item.re_output, answer, result)
-                except BenchmarkExecutionError as e:
-                    logger.warning(str(e))
+                except AuthenticationError as e:
+                    logger.warning("%s", e)
+                    failed_requests += 1
+                except Exception:
+                    logger.exception("Error")
                     failed_requests += 1
                 Result.objects.create(
                     group=group,

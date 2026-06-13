@@ -9,6 +9,7 @@ from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
+from litellm.exceptions import AuthenticationError
 
 from core.benchmark import (
     BenchmarkExecutionError,
@@ -343,7 +344,8 @@ class ResultAdmin(BaseModelAdmin):
             try:
                 result.result, result.exec_time = run_single_benchmark(item=result.item, llm_model=result.llm_model)
                 result.judge = check_judge(result.item.answer_code, result.item.re_output, answer, result.result)
-            except BenchmarkExecutionError:
+            except BenchmarkExecutionError, AuthenticationError:
+                logger.warning("%s", e)
                 result.result, result.exec_time = "", float("nan")
                 result.judge = None
         Result.objects.bulk_update(results, ["result", "exec_time", "judge"])
