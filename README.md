@@ -62,7 +62,7 @@ task manage tailwind install
 task manage runserver
 ```
 
-`http://localhost:8000/admin/` を開いて `admin` でログインしてください。
+`http://localhost:8000/` を開いて `admin` でログインしてください。
 
 参考:
 
