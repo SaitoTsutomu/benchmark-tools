@@ -20,6 +20,18 @@ class TimestampedModel(models.Model):
         super().save(*args, **kwargs)
 
 
+class Effort(models.TextChoices):
+    """Reasoningのeffort"""
+
+    EMPTY = "", ""
+    NONE = "none", "None"
+    MINIMAL = "minimal", "Minimal"
+    LOW = "low", "Low"
+    MEDIUM = "medium", "Medium"
+    HIGH = "high", "High"
+    XHIGH = "xhigh", "Xhigh"
+
+
 class LlmModel(TimestampedModel):
     """LLMモデル"""
 
@@ -28,6 +40,13 @@ class LlmModel(TimestampedModel):
     description = models.TextField("説明", blank=True)
     base_url = models.URLField("URL", blank=True)
     api_key_name = models.CharField("APIキーの環境変数名", max_length=255, blank=True)
+    effort = models.CharField(
+        max_length=16,
+        choices=Effort,
+        default=Effort.EMPTY,
+        verbose_name="thinkingレベル",
+        help_text="geminiの場合 https://ai.google.dev/gemini-api/docs/thinking",
+    )
     can_execute_python = models.BooleanField(
         "ツール使用可", help_text="Pythonコードを実行できるかどうか", default=False
     )

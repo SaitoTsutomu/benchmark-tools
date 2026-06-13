@@ -74,7 +74,7 @@ class LlmModelAdmin(BaseModelAdmin):
         "name",
         "model",
         "base_url",
-        "api_key_name",
+        "effort",
         "can_execute_python",
         "updated_at",
     )

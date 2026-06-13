@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
 from time import perf_counter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from agents import Agent, Runner, function_tool
+from agents import Agent, ModelSettings, Runner, function_tool
 from agents.extensions.models.litellm_model import LitellmModel
 from litellm.exceptions import AuthenticationError
+from openai.types.shared import Reasoning
 
 from core.models import Group, Item, LlmModel, Result
 
@@ -68,7 +69,11 @@ def run_single_benchmark(item: Item, llm_model: LlmModel) -> tuple[str, float]:
         )
     api_key = _resolve_api_key(llm_model)
     model = LitellmModel(llm_model.model, base_url=llm_model.base_url, api_key=api_key)
-    agent = Agent(name="Assistant", model=model, tools=tools, instructions=instructions)
+    options: dict[str, Any] = {"tools": tools, "instructions": instructions}
+    if llm_model.effort:
+        # Geminiで確認
+        options["model_settings"] = ModelSettings(reasoning=Reasoning(effort=llm_model.effort))
+    agent = Agent(name="Assistant", model=model, **options)
     start = perf_counter()
     result = Runner.run_sync(agent, item.problem)
     exec_time = perf_counter() - start
