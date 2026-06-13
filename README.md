@@ -94,6 +94,15 @@ task manage tailwind dev
 
 ## 補足
 
+### 環境変数
+
+- Gemini APIを使用する場合は`.env`の`GEMINI_API_KEY`にAPIキーを指定してください。Geminiの場合、LLMモデルの「APIキーの環境変数名」は空欄でOKです。
+
+### thinkingレベル
+
+- thinkingレベルは、LLMモデルの「thinkingレベル」で指定しますが、LM Studioでは、この指定は無視されます。LM Studioでthinkingを変えたいときは、LM Studio側で設定してください。
+- Gemini APIのthinkingレベルは、モデルによってデフォルト値（空欄時の値）が異なります。また、モデルによって指定可能なレベルが異なります。詳しくは <https://ai.google.dev/gemini-api/docs/thinking> を参照してください。
+
 ### サマリー計算
 
 - `Result` は `group/item/llm_model`が同一の複数レコードが存在し得ます
