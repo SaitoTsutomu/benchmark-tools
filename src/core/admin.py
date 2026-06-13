@@ -1,10 +1,12 @@
+import csv
 from logging import getLogger
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from django import forms
 from django.contrib import admin, messages
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 from django.db.models import Avg, Count, Field, QuerySet, TextField
+from django.http import StreamingHttpResponse
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils import timezone
@@ -21,11 +23,39 @@ from core.benchmark import (
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     from django.http import HttpRequest
     from django.http.response import HttpResponse
     from django.urls.resolvers import URLPattern
 
 logger = getLogger(__name__)
+
+
+def generate_csv_response(
+    model: models.Model, target_fields: set[str], queryset: QuerySet[Any], filename: str, *, bom: bool = False
+) -> StreamingHttpResponse:
+    """QuerySetからストリーミングCSVレスポンスを生成する共通関数"""
+
+    class Echo:
+        @classmethod
+        def write(cls, value: str) -> str:
+            return value
+
+    def stream() -> Iterator[str]:
+        writer = csv.writer(Echo())
+        if bom:
+            yield "\xef\xbb\xbf"  # BOM
+        yield writer.writerow(header)
+        for obj in queryset.iterator():
+            yield writer.writerow([getattr(obj, f) for f in columns])
+
+    fields = model._meta.fields  # noqa: SLF001
+    columns = [f.name for f in fields if f.name in target_fields]
+    header = [f.verbose_name for f in fields if f.name in target_fields]
+    response = StreamingHttpResponse(stream(), content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 
 class BaseModelAdmin(admin.ModelAdmin):
@@ -237,7 +267,7 @@ class ResultAdmin(BaseModelAdmin):
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
-    actions = ("new_group", "run_benchmark", "run_check_judge")
+    actions = ("download_csv", "new_group", "run_benchmark", "run_check_judge")
 
     @classmethod
     def _summary_by_dimension(cls, queryset: QuerySet[Result], label_field: str) -> list[dict[str, object]]:
@@ -337,6 +367,11 @@ class ResultAdmin(BaseModelAdmin):
     @admin.display(ordering="exec_time", description="実行時間")
     def display_exec_time(cls, obj: Result) -> str:
         return f"{obj.exec_time:.1f}"
+
+    @admin.action(description="選択したテスト結果をCSVでダウンロード")
+    def download_csv(self, _request: HttpRequest, queryset: QuerySet[Result]) -> StreamingHttpResponse:  # noqa: PLR6301
+        target_fields = {"group", "item", "llm_model", "exec_time", "judge"}
+        return generate_csv_response(Result, target_fields, queryset, "result.csv")
 
     @admin.action(description="選択した中のテスト項目で新しいグループを作成")
     def new_group(self, request: HttpRequest, queryset: QuerySet[Result]) -> HttpResponse | None:

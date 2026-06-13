@@ -4,7 +4,7 @@
 {"model": "core.llmmodel","pk": 4,"fields": {"name": "Gemma 4 31B QAT","model": "lm_studio/google/gemma-4-31b-qat","base_url": "http://127.0.0.1:1234/v1"}}
 {"model": "core.llmmodel","pk": 5,"fields": {"name": "Gemma 4 31B QAT tool","model": "lm_studio/google/gemma-4-31b-qat","base_url": "http://127.0.0.1:1234/v1","can_execute_python": true}}
 {"model": "core.llmmodel","pk": 6,"fields": {"name": "Qwen 3.6 27B","model": "lm_studio/qwen/qwen3.6-27b","base_url": "http://127.0.0.1:1234/v1"}}
-{"model": "core.llmmodel","pk": 7,"fields": {"name": "Gamini 3.5 flash","model": "gemini/gemini-3.5-flash"}}
+{"model": "core.llmmodel","pk": 7,"fields": {"name": "Gemini 3.5 flash","model": "gemini/gemini-3.5-flash"}}
 {"model": "core.item","pk": 1,"fields": {"name": "study_polars2_1.1.1","title": "問題 1.1.1 Polarsのバージョン確認","problem": "Polarsのバージョンを出力してください。\n以下のコードを完成し、完成したコード全体のみを回答してください。\n```python\nimport polars as pl\n```","answer_code": "import polars as pl\nprint(pl.__version__)"}}
 {"model": "core.item","pk": 2,"fields": {"name": "study_polars2_1.1.2","title": "問題 1.1.2 辞書からDataFrame","problem": "辞書からDataFrameを作成し、`df`に代入してください。\n以下のコードを完成し、追加したコードのみを回答してください。\n```python\nimport polars as pl\n_data = {\n    'id': [0, 1, 2],\n    'name': [\"Alice\", \"Bob\", \"Carol\"],\n    'age': [20, 18, 32],\n}\n```","answer": "df = pl.DataFrame(_data)"}}
 {"model": "core.item","pk": 3,"fields": {"name": "study_polars2_1.1.3","title": "問題 1.1.3 CSV読込","problem": "CSVファイルを読み込んでDataFrameを作成しprintで出力してください。\n以下のコードを完成し、完成したコード全体のみを回答してください。\n```python\nimport polars as pl\n_file = \"data/titanic_train.csv\"\n```","answer_code": "import polars as pl\n_file = \"data/titanic_train.csv\"\ndf_titanic = pl.read_csv(_file)\nprint(df_titanic)"}}
