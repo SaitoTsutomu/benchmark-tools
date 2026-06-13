@@ -1,4 +1,4 @@
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from django.db import models
 from django.db.models import Q
@@ -14,7 +14,7 @@ class TimestampedModel(models.Model):
     class Meta:
         abstract = True
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
+    def save(self, *args: object, **kwargs: object) -> None:
         """時刻を更新する"""
         self.updated_at = timezone.now()
         super().save(*args, **kwargs)
@@ -25,12 +25,12 @@ class LlmModel(TimestampedModel):
 
     name = models.CharField("名前", max_length=255, unique=True)
     model = models.CharField("モデル名", max_length=255)
+    description = models.TextField("説明", blank=True)
     base_url = models.URLField("URL")
     api_key_name = models.CharField("APIキーの環境変数名", max_length=255, blank=True)
     can_execute_python = models.BooleanField(
         "ツール使用可", help_text="Pythonコードを実行できるかどうか", default=False
     )
-    can_parallel = models.BooleanField("並列実行可能か", default=False)
 
     class Meta:
         verbose_name = verbose_name_plural = "LLMモデル"
@@ -66,6 +66,7 @@ class Group(TimestampedModel):
     """テストグループ"""
 
     name = models.CharField("名前", max_length=255, unique=True)
+    description = models.TextField("説明", blank=True)
 
     class Meta:
         verbose_name = verbose_name_plural = "テストグループ"

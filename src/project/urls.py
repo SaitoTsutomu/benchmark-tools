@@ -4,7 +4,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path("", RedirectView.as_view(pattern_name="admin:index", permanent=False), name="root"),
+    path("", RedirectView.as_view(pattern_name="admin:core_result_changelist", permanent=False), name="root"),
     path("admin/", admin.site.urls),
     path("core/", include("core.urls")),
 ]

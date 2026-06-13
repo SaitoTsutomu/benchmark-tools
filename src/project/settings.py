@@ -47,7 +47,10 @@ if DEBUG:
         "django_browser_reload.middleware.BrowserReloadMiddleware",
     ]
 
+
 ROOT_URLCONF = "project.urls"
+LOGOUT_REDIRECT_URL = "/admin/login/?next=/admin/core/result/"
+
 
 TEMPLATES = [
     {

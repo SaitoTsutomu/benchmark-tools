@@ -1,10 +1,10 @@
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from django import forms
 from django.contrib import admin, messages
 from django.db import IntegrityError, transaction
-from django.db.models import Avg, Count, QuerySet
+from django.db.models import Avg, Count, Field, QuerySet, TextField
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils import timezone
@@ -20,7 +20,6 @@ from core.benchmark import (
 from core.models import Group, GroupItem, GroupLlmModel, Item, LlmModel, Result
 
 if TYPE_CHECKING:
-    from django.db import models
     from django.http import HttpRequest
     from django.http.response import HttpResponse
     from django.urls.resolvers import URLPattern
@@ -28,8 +27,16 @@ if TYPE_CHECKING:
 logger = getLogger(__name__)
 
 
+class BaseModelAdmin(admin.ModelAdmin):
+    """Textareaのサイズを一律変更するための基底クラス"""
+
+    formfield_overrides: ClassVar[dict] = {
+        TextField: {"widget": forms.Textarea(attrs={"rows": 5, "cols": 80})},
+    }
+
+
 @admin.register(LlmModel)
-class LlmModelAdmin(admin.ModelAdmin):
+class LlmModelAdmin(BaseModelAdmin):
     """LLMモデル"""
 
     list_display = (
@@ -41,7 +48,7 @@ class LlmModelAdmin(admin.ModelAdmin):
         "updated_at",
     )
     readonly_fields = ("updated_at", "created_at")
-    list_filter = ("can_execute_python", "can_parallel")
+    list_filter = ("can_execute_python",)
     search_fields = ("name", "model", "base_url", "api_key_name")
     ordering = ("name", "model")
     actions = ("new_llm_model",)
@@ -66,7 +73,6 @@ class LlmModelAdmin(admin.ModelAdmin):
                         base_url=src_llm_model.base_url,
                         api_key_name=src_llm_model.api_key_name,
                         can_execute_python=src_llm_model.can_execute_python,
-                        can_parallel=src_llm_model.can_parallel,
                     )
                     break
                 except IntegrityError:
@@ -81,7 +87,7 @@ class LlmModelAdmin(admin.ModelAdmin):
 
 
 @admin.register(Item)
-class ItemAdmin(admin.ModelAdmin):
+class ItemAdmin(BaseModelAdmin):
     """テスト項目"""
 
     list_display = ("name", "title", "updated_at")
@@ -133,7 +139,7 @@ class GroupLlmModelInline(admin.TabularInline):
 
 
 @admin.register(Group)
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(BaseModelAdmin):
     """テストグループ"""
 
     list_display = ("name", "llm_model_count", "item_count", "updated_at", "display_run")
@@ -217,10 +223,11 @@ class GroupAdmin(admin.ModelAdmin):
 
 
 @admin.register(Result)
-class ResultAdmin(admin.ModelAdmin):
+class ResultAdmin(BaseModelAdmin):
     """テスト結果"""
 
     list_display = ("group", "item", "llm_model", "judge", "display_exec_time", "updated_at")
+    list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
     list_filter = ("group", "llm_model", "judge")
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
@@ -313,7 +320,7 @@ class ResultAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(
         self,
-        db_field: models.Field,
+        db_field: Field,
         request: HttpRequest,
         **kwargs: object,
     ) -> forms.Field | None:
