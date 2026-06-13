@@ -48,6 +48,7 @@ class LlmModelAdmin(BaseModelAdmin):
         "can_execute_python",
         "updated_at",
     )
+    list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
     list_filter = ("can_execute_python",)
     search_fields = ("name", "model", "base_url", "api_key_name")
@@ -92,6 +93,7 @@ class ItemAdmin(BaseModelAdmin):
     """テスト項目"""
 
     list_display = ("name", "title", "updated_at")
+    list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name", "problem", "answer")
     ordering = ("pk",)
@@ -144,6 +146,7 @@ class GroupAdmin(BaseModelAdmin):
     """テストグループ"""
 
     list_display = ("name", "llm_model_count", "item_count", "updated_at", "display_run")
+    list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
     search_fields = ("name",)
     ordering = ("name",)
@@ -234,7 +237,7 @@ class ResultAdmin(BaseModelAdmin):
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
-    actions = ("run_benchmark", "run_check_judge")
+    actions = ("new_group", "run_benchmark", "run_check_judge")
 
     @classmethod
     def _summary_by_dimension(cls, queryset: QuerySet[Result], label_field: str) -> list[dict[str, object]]:
@@ -335,6 +338,28 @@ class ResultAdmin(BaseModelAdmin):
     def display_exec_time(cls, obj: Result) -> str:
         return f"{obj.exec_time:.1f}"
 
+    @admin.action(description="選択した中のテスト項目で新しいグループを作成")
+    def new_group(self, request: HttpRequest, queryset: QuerySet[Result]) -> HttpResponse | None:
+        """選択した中のテスト項目で新しいグループを作成"""
+        item_ids = queryset.values_list("item_id", flat=True).distinct()
+        max_attempts = 100
+        for i in range(max_attempts):
+            name = f"New Group{i}"
+            try:
+                with transaction.atomic():
+                    group = Group.objects.create(name=name)
+                    objs = [GroupItem(group=group, item_id=item_id) for item_id in item_ids]
+                    GroupItem.objects.bulk_create(objs)
+                break
+            except IntegrityError:
+                continue
+        else:
+            self.message_user(request, "新しいグループを作成できませんでした", level=messages.ERROR)
+            return None
+
+        self.message_user(request, "新しいグループを作成しました", level=messages.SUCCESS)
+        return redirect("admin:core_group_change", object_id=group.id)
+
     @admin.action(description="選択したテスト結果を再実行")
     def run_benchmark(self, request: HttpRequest, queryset: QuerySet[Result]) -> None:
         """選択したテスト結果を再実行"""
@@ -344,7 +369,7 @@ class ResultAdmin(BaseModelAdmin):
             try:
                 result.result, result.exec_time = run_single_benchmark(item=result.item, llm_model=result.llm_model)
                 result.judge = check_judge(result.item.answer_code, result.item.re_output, answer, result.result)
-            except BenchmarkExecutionError, AuthenticationError:
+            except (BenchmarkExecutionError, AuthenticationError) as e:
                 logger.warning("%s", e)
                 result.result, result.exec_time = "", float("nan")
                 result.judge = None
