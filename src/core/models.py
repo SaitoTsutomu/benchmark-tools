@@ -46,6 +46,7 @@ class LlmModel(TimestampedModel):
         default=Effort.EMPTY,
         verbose_name="thinkingレベル",
         help_text="LM Studioでは無効。geminiの場合 https://ai.google.dev/gemini-api/docs/thinking",
+        blank=True,
     )
     can_execute_python = models.BooleanField(
         "ツール使用可", help_text="Pythonコードを実行できるかどうか", default=False

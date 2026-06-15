@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import TYPE_CHECKING, Any
 
 from agents import Agent, ModelSettings, Runner, function_tool
+from agents.exceptions import AgentsException
 from agents.extensions.models.litellm_model import LitellmModel
 from litellm.exceptions import AuthenticationError
 from openai.types.shared import Reasoning
@@ -156,7 +157,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 try:
                     result, exec_time = run_single_benchmark(item=item, llm_model=llm_model)
                     judge = check_judge(item.answer_code, item.re_output, answer, result)
-                except AuthenticationError as e:
+                except (AuthenticationError, AgentsException) as e:
                     logger.warning("%s", e)
                     failed_requests += 1
                 except Exception:
