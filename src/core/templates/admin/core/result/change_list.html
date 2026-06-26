@@ -1,17 +1,18 @@
 {% extends "admin/change_list.html" %}
 {% load i18n %}
 {% block object-tools %}
+  {# 空にすることで右上の追加ボタンを削除している #}
 {% endblock object-tools %}
 {% block content %}
   <div class="mb-6 w-full">
-    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div class="space-y-4">
-        <section class="w-full rounded-lg border border-gray-300 p-4 shadow-sm">
+    <div class="grid gap-4 lg:grid-cols-5">
+      <div class="grid gap-4 lg:col-span-4">
+        <section class="w-full rounded-lg border border-base-200 p-4 shadow-sm">
           <h3 class="mb-3 text-base font-semibold">LLMモデル別サマリー</h3>
           <div class="overflow-x-auto">
             <table class="w-full border-collapse text-sm">
               <thead>
-                <tr class="border-b border-gray-300">
+                <tr class="border-b border-base-300">
                   <th class="px-2 py-2">LLMモデル</th>
                   <th class="px-2 py-2">
                     <span class="block text-right">正解率</span>
@@ -29,7 +30,7 @@
               </thead>
               <tbody>
                 {% for row in summary_all_by_llm %}
-                  <tr class="border-b border-gray-100">
+                  <tr class="border-b border-base-100">
                     <td class="px-2 py-2">{{ row.label }}</td>
                     <td class="px-2 py-2 text-right">{{ row.accuracy|floatformat:1 }}%</td>
                     <td class="px-2 py-2 text-right">
@@ -40,19 +41,19 @@
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="5" class="px-2 py-2 text-gray-600">データがありません。</td>
+                    <td colspan="5" class="px-2 py-2 text-base-600">データがありません。</td>
                   </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
         </section>
-        <section class="w-full rounded-lg border border-gray-300 p-4 shadow-sm">
+        <section class="w-full rounded-lg border border-base-200 p-4 shadow-sm">
           <h3 class="mb-3 text-base font-semibold">テストグループ別サマリー</h3>
           <div class="overflow-x-auto">
             <table class="w-full border-collapse text-sm">
               <thead>
-                <tr class="border-b border-gray-300">
+                <tr class="border-b border-base-300">
                   <th class="px-2 py-2">テストグループ</th>
                   <th class="px-2 py-2">
                     <span class="block text-right">正解率</span>
@@ -70,7 +71,7 @@
               </thead>
               <tbody>
                 {% for row in summary_all_by_group %}
-                  <tr class="border-b border-gray-100">
+                  <tr class="border-b border-base-100">
                     <td class="px-2 py-2">{{ row.label }}</td>
                     <td class="px-2 py-2 text-right">{{ row.accuracy|floatformat:1 }}%</td>
                     <td class="px-2 py-2 text-right">
@@ -81,7 +82,7 @@
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="5" class="px-2 py-2 text-gray-600">データがありません。</td>
+                    <td colspan="5" class="px-2 py-2 text-base-600">データがありません。</td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -89,7 +90,7 @@
           </div>
         </section>
       </div>
-      <aside id="summary-filter-slot" class="w-full">
+      <aside id="summary-filter-slot" class="w-full lg:col-span-1">
       </aside>
     </div>
   </div>

@@ -133,5 +133,6 @@ LOGGING = {
 # Unfold
 
 UNFOLD = {
-    "THEME": "dark",
+    "SITE_TITLE": "Benchmark",
+    "SITE_HEADER": "ベンチマークツール",
 }

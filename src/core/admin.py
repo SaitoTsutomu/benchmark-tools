@@ -266,9 +266,10 @@ class ResultAdmin(BaseModelAdmin):
     list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
     list_filter_submit = True
+    list_filter_sheet = False  # フィルターを常に表示
     list_filter = (
-        ("group", RelatedCheckboxFilter),
         ("llm_model", RelatedCheckboxFilter),
+        ("group", RelatedCheckboxFilter),
         "judge",
     )
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
