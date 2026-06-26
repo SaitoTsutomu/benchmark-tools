@@ -95,7 +95,7 @@ LANGUAGE_CODE = "ja"
 TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 USE_TZ = True
-
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
@@ -134,42 +134,17 @@ LOGGING = {
 
 # Unfold
 
+navigation_items = [
+    {"title": "サイト管理", "icon": "dashboard", "link": reverse_lazy("admin:index")},
+    {"title": "LLMモデル", "icon": "smart_toy", "link": reverse_lazy("admin:core_llmmodel_changelist")},
+    {"title": "テスト項目", "icon": "quiz", "link": reverse_lazy("admin:core_item_changelist")},
+    {"title": "テストグループ", "icon": "dataset", "link": reverse_lazy("admin:core_group_changelist")},
+    {"title": "テスト結果", "icon": "bar_chart", "link": reverse_lazy("admin:core_result_changelist")},
+]
 UNFOLD = {
     "SITE_TITLE": "Benchmark",
     "SITE_HEADER": "ベンチマークツール",
     "SIDEBAR": {
-        "navigation": [
-            {
-                "title": "メニュー",
-                "separator": True,
-                "items": [
-                    {
-                        "title": "ダッシュボード",
-                        "icon": "dashboard",
-                        "link": reverse_lazy("admin:index"),
-                    },
-                    {
-                        "title": "LLMモデル",
-                        "icon": "smart_toy",
-                        "link": reverse_lazy("admin:core_llmmodel_changelist"),
-                    },
-                    {
-                        "title": "テスト項目",
-                        "icon": "quiz",
-                        "link": reverse_lazy("admin:core_item_changelist"),
-                    },
-                    {
-                        "title": "テストグループ",
-                        "icon": "dataset",
-                        "link": reverse_lazy("admin:core_group_changelist"),
-                    },
-                    {
-                        "title": "テスト結果",
-                        "icon": "bar_chart",
-                        "link": reverse_lazy("admin:core_result_changelist"),
-                    },
-                ],
-            }
-        ],
+        "navigation": [{"title": "メニュー", "separator": True, "items": navigation_items}],
     },
 }

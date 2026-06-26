@@ -1,6 +1,6 @@
 [project]
 authors = [
-  {name = "Saito Tsutomu", email = "tsutomu.saito@moai-lab.jp"},
+  {name = "Saito Tsutomu", email = "tsutomu7@hotmail.co.jp"},
 ]
 dependencies = [
   "django>=6.0",

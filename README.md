@@ -101,6 +101,38 @@ task manage makemigrations
 task manage migrate
 ```
 
+### 国際化（I18N）
+
+準備としてsettings.pyに以下を追加します。
+
+```python
+LOCALE_PATHS = [BASE_DIR / "locale"]
+```
+
+src以下のテンプレートから抽出する場合は、以下を実行します。
+
+```sh
+mkdir src/locale
+(cd src; uv run django-admin makemessages -l ja)
+```
+
+そうでない場合は、`src/locale/ja/LC_MESSAGES/django.po`を下記のように作成します。
+
+```text
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Apply Filters"
+msgstr "フィルター適用"
+```
+
+`django.po`を修正後、以下を実行します。
+
+```sh
+(cd src; uv run django-admin compilemessages)
+```
+
 ## ユーティリティ
 
 ### lint（コードのチェック）
