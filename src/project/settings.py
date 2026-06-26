@@ -2,6 +2,8 @@ import os
 from ast import literal_eval
 from pathlib import Path
 
+from django.urls import reverse_lazy
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,4 +137,39 @@ LOGGING = {
 UNFOLD = {
     "SITE_TITLE": "Benchmark",
     "SITE_HEADER": "ベンチマークツール",
+    "SIDEBAR": {
+        "navigation": [
+            {
+                "title": "メニュー",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "ダッシュボード",
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                    {
+                        "title": "LLMモデル",
+                        "icon": "smart_toy",
+                        "link": reverse_lazy("admin:core_llmmodel_changelist"),
+                    },
+                    {
+                        "title": "テスト項目",
+                        "icon": "quiz",
+                        "link": reverse_lazy("admin:core_item_changelist"),
+                    },
+                    {
+                        "title": "テストグループ",
+                        "icon": "dataset",
+                        "link": reverse_lazy("admin:core_group_changelist"),
+                    },
+                    {
+                        "title": "テスト結果",
+                        "icon": "bar_chart",
+                        "link": reverse_lazy("admin:core_result_changelist"),
+                    },
+                ],
+            }
+        ],
+    },
 }
