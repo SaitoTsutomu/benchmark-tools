@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 from litellm.exceptions import AuthenticationError
 from unfold.admin import ModelAdmin
+from unfold.contrib.filters.admin import RelatedCheckboxFilter
 
 from core.benchmark import (
     BenchmarkExecutionError,
@@ -264,7 +265,12 @@ class ResultAdmin(BaseModelAdmin):
     list_display = ("group", "item", "llm_model", "judge", "display_exec_time", "updated_at")
     list_per_page = 20
     readonly_fields = ("updated_at", "created_at")
-    list_filter = ("group", "llm_model", "judge")
+    list_filter_submit = True
+    list_filter = (
+        ("group", RelatedCheckboxFilter),
+        ("llm_model", RelatedCheckboxFilter),
+        "judge",
+    )
     search_fields = ("group__name", "item__name", "llm_model__name", "llm_model__model")
     autocomplete_fields = ("group", "item", "llm_model")
     change_list_template = "admin/core/result/change_list.html"
