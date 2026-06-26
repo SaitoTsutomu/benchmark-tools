@@ -38,12 +38,6 @@ cp .env.sample .env
 task init_db
 ```
 
-初回のみ、Tailwindを初期化します。
-
-```sh
-task manage tailwind install
-```
-
 ### Dockerイメージ作成
 
 初回のみ、Dockerイメージを作成します。
@@ -63,14 +57,6 @@ task manage runserver
 ```
 
 `http://localhost:8000/` を開いて `admin` でログインしてください。
-
-参考:
-
-以下のようにするとDjangoの起動とTailwindの監視を同時にします。デザインの開発時に便利です。
-
-```sh
-task manage tailwind dev
-```
 
 ### ベンチマーク実行手順
 

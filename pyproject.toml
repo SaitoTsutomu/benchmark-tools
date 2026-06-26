@@ -4,7 +4,6 @@ authors = [
 ]
 dependencies = [
   "django>=6.0",
-  "django-tailwind[cookiecutter,honcho,reload]>=4.4.2",
   "openai-agents[litellm]>=0.15",
 ]
 description = "LLM Benchmark tool"
