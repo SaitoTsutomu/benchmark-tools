@@ -4,6 +4,7 @@ authors = [
 ]
 dependencies = [
   "django>=6.0",
+  "django-unfold>=0.98.0",
   "openai-agents[litellm]>=0.15",
 ]
 description = "LLM Benchmark tool"

@@ -20,6 +20,7 @@ ALLOWED_HOSTS = ["127.0.0.1", os.environ.get("ALLOWED_HOST", "localhost")]
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -125,4 +126,11 @@ LOGGING = {
             "level": "WARNING",
         },
     },
+}
+
+
+# Unfold
+
+UNFOLD = {
+    "THEME": "dark",
 }

@@ -12,6 +12,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.html import format_html
 from litellm.exceptions import AuthenticationError
+from unfold.admin import ModelAdmin
 
 from core.benchmark import (
     BenchmarkExecutionError,
@@ -58,7 +59,7 @@ def generate_csv_response(
     return response
 
 
-class BaseModelAdmin(admin.ModelAdmin):
+class BaseModelAdmin(ModelAdmin):
     """Textareaのサイズを一律変更するための基底クラス"""
 
     formfield_overrides: ClassVar[dict] = {
