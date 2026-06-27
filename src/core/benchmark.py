@@ -114,6 +114,7 @@ def run_code(code: str) -> tuple[int, str, str]:
         text=True,
         capture_output=True,
         check=False,
+        timeout=30,
     )
     logger.info("run_code \n--------\n%s\n--------\n", code[:500])
     return result.returncode, result.stdout, result.stderr
@@ -157,7 +158,7 @@ def run_group_benchmark(groups: list[Group]) -> BenchmarkRunSummary:
                 try:
                     result, exec_time = run_single_benchmark(item=item, llm_model=llm_model)
                     judge = check_judge(item.answer_code, item.re_output, answer, result)
-                except (AuthenticationError, AgentsException) as e:
+                except (AuthenticationError, AgentsException, subprocess.TimeoutExpired) as e:
                     logger.warning("%s", e)
                     failed_requests += 1
                 except Exception:
