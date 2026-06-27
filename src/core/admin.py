@@ -344,7 +344,7 @@ class ResultAdmin(BaseModelAdmin):
         """指定クエリの結果をグループ単位で集計する。"""
         return cls._summary_by_dimension(queryset, "group__name")
 
-    def changelist_view(self, request: HttpRequest, extra_context: dict[str, object] | None = None) -> HttpResponse:
+    def changelist_view(self, request: HttpRequest, extra_context: dict[str, str] | None = None) -> HttpResponse:
         """一覧画面に集計サマリーを追加する。"""
         response = super().changelist_view(request, extra_context=extra_context)
         context = getattr(response, "context_data", None)
